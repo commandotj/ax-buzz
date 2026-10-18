@@ -10,35 +10,35 @@ import (
 
 // Package holds all combined information for a formula or cask.
 type Package struct {
-	Name                  string // Used as a unique key
-	Aliases               []string
-	Tap                   string
-	Version               string
-	Revision              int
-	InstalledVersion      string
-	InstalledRevision     int
-	Desc                  string
-	Homepage              string
-	Urls                  []string
-	License               string
-	Dependencies          []string
-	BuildDependencies     []string
-	Dependents            []string
-	Conflicts             []string
-	Installs90d           int
-	AutoUpdate            bool
-	IsCask                bool
-	IsInstalled           bool
-	IsOutdated            bool
-	IsPinned              bool
-	IsDeprecated          bool
-	IsDisabled            bool
-	InstalledAsDependency bool
-	Size                  int64  // Size in kbs
-	FormattedSize         string // Formated size like 24.5MB, 230KB
-	InstallSupported      bool   // Whether Buzz supports installing the package
-	InstalledDate         string
-	ReleaseInfo           *gh.ReleaseInfo // Only set when package is outdated
+	Name                  string          `json:"name"`
+	Aliases               []string        `json:"aliases"`
+	Tap                   string          `json:"tap"`
+	Version               string          `json:"version"`
+	Revision              int             `json:"revision"`
+	InstalledVersion      string          `json:"installedVersion"`
+	InstalledRevision     int             `json:"installedRevision"`
+	Desc                  string          `json:"description"`
+	Homepage              string          `json:"homepage"`
+	Urls                  []string        `json:"urls"`
+	License               string          `json:"license"`
+	Dependencies          []string        `json:"dependencies"`
+	BuildDependencies     []string        `json:"buildDependencies"`
+	Dependents            []string        `json:"dependents"`
+	Conflicts             []string        `json:"conflicts"`
+	Installs90d           int             `json:"installs90d"`
+	AutoUpdate            bool            `json:"autoUpdate"`
+	IsCask                bool            `json:"isCask"`
+	IsInstalled           bool            `json:"isInstalled"`
+	IsOutdated            bool            `json:"isOutdated"`
+	IsPinned              bool            `json:"isPinned"`
+	IsDeprecated          bool            `json:"isDeprecated"`
+	IsDisabled            bool            `json:"isDisabled"`
+	InstalledAsDependency bool            `json:"installedAsDependency"`
+	Size                  int64           `json:"size"`
+	FormattedSize         string          `json:"formattedSize"`
+	InstallSupported      bool            `json:"installSupported"`
+	InstalledDate         string          `json:"installedDate"`
+	ReleaseInfo           *gh.ReleaseInfo `json:"releaseInfo,omitempty"`
 }
 
 const (

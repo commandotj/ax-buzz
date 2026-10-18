@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buzz Icon Iterations</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px; font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; transition: background .2s, color .2s; }
+  body.light { background: #f1ece2; color: #283a42; }
+  body.dark { background: #132940; color: #f1eadd; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 24px; max-width: 1180px; margin: 0 auto 28px; }
+  h1 { margin: 0; font: 500 30px/1.1 Georgia, "Times New Roman", serif; }
+  header p { margin: 7px 0 0; color: #647274; }
+  body.dark header p { color: #b0c0c2; }
+  button { border: 1px solid currentColor; border-radius: 6px; padding: 9px 13px; background: transparent; color: inherit; cursor: pointer; }
+  main { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; max-width: 1180px; margin: auto; }
+  article { overflow: hidden; border: 1px solid rgb(128 128 128 / 35%); border-radius: 10px; }
+  .stage { display: grid; min-height: 330px; place-items: center; padding: 36px; background: #fbf9f3; }
+  body.dark .stage { background: #172f49; }
+  .stage img { width: min(100%, 240px); aspect-ratio: 1; }
+  .label { padding: 15px 17px 17px; border-top: 1px solid rgb(128 128 128 / 25%); }
+  .label strong { display: block; margin-bottom: 5px; }
+  .label span { color: #647274; line-height: 1.45; }
+  body.dark .label span { color: #b0c0c2; }
+  h2 { max-width: 1180px; margin: 34px auto 14px; font: 500 20px Georgia, "Times New Roman", serif; }
+  .size-check { display: flex; align-items: end; gap: 20px; max-width: 1180px; margin: 0 auto; }
+  .size-check figure { display: grid; gap: 7px; justify-items: center; margin: 0; }
+  .size-check img { image-rendering: auto; }
+  .size-check figcaption { color: #647274; font-size: 11px; }
+  body.dark .size-check figcaption { color: #b0c0c2; }
+  @media (max-width: 520px) { body { padding: 20px; } header { align-items: flex-start; } .stage { min-height: 260px; } }
+</style>
+</head>
+<body class="light">
+  <header>
+    <div><h1>Buzz · Antikythera Instrument</h1><p>Iteration 1 · simplified for crisp recognition at small sizes.</p></div>
+    <button id="theme-toggle" type="button">Show Dark</button>
+  </header>
+  <main>
+    <article><div class="stage"><img src="iterations/iteration-1.svg" alt="Simplified Antikythera inspired celestial instrument icon"></div><div class="label"><strong>Iteration 1 · Antikythera Instrument</strong><span>Three broad orbital bands, a brass dial, one star marker. Fine constellation details removed.</span></div></article>
+  </main>
+  <h2>Favicon Size Check</h2>
+  <div class="size-check">
+    <figure><img src="iterations/iteration-1.svg" width="64" height="64" alt="Icon at 64 pixels"><figcaption>64px</figcaption></figure>
+    <figure><img src="iterations/iteration-1.svg" width="32" height="32" alt="Icon at 32 pixels"><figcaption>32px</figcaption></figure>
+    <figure><img src="iterations/iteration-1.svg" width="16" height="16" alt="Icon at 16 pixels"><figcaption>16px</figcaption></figure>
+  </div>
+<script>
+  const button = document.querySelector("#theme-toggle");
+  button.addEventListener("click", () => {
+    const dark = document.body.classList.toggle("dark");
+    document.body.classList.toggle("light", !dark);
+    button.textContent = dark ? "Show Light" : "Show Dark";
+  });
+</script>
+</body>
+</html>

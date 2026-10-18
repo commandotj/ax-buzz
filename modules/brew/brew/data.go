@@ -1,9 +1,8 @@
 package brew
 
 import (
-	"bytes"
+	"context"
 	"log"
-	"os/exec"
 	"sort"
 	"strconv"
 	"strings"
@@ -48,9 +47,9 @@ func LoadData(fetchAnalytics, fetchSize bool, loadingPrgs *loading.LoadingProgre
 		var caskAnalytics90d apiCaskAnalytics
 		var formulaInstallInfo, caskInstallInfo []*installInfo
 
-		go fetchFormula(formulaeChan, errChan, *flagInvalidateCache)
+		go fetchFormula(context.Background(), formulaeChan, errChan, *flagInvalidateCache)
 		loadingPrgs.AddTask(formulaeChan, "Loading all Formulae")
-		go fetchCask(casksChan, errChan, *flagInvalidateCache)
+		go fetchCask(context.Background(), casksChan, errChan, *flagInvalidateCache)
 		loadingPrgs.AddTask(casksChan, "Loading all Casks")
 		if fetchAnalytics {
 			go fetchFormulaAnalytics(formulaAnalytics90dChan, errChan)
@@ -64,10 +63,6 @@ func LoadData(fetchAnalytics, fetchSize bool, loadingPrgs *loading.LoadingProgre
 		loadingPrgs.AddTask(formulaInstallInfoChan, "Loading formulae installation data")
 		go fetchInstalledCask(fetchSize, caskInstallInfoChan)
 		loadingPrgs.AddTask(caskInstallInfoChan, "Loading casks installation data")
-
-		// Update brew in the background, we don't depend on `brew` command to get data
-		// But we need brew to be updated when install/upgrade packages
-		go updateBrew()
 
 		for range loadingTasksNum {
 			select {
@@ -97,16 +92,6 @@ func LoadData(fetchAnalytics, fetchSize bool, loadingPrgs *loading.LoadingProgre
 			caskInstallInfo,
 		)
 		return DataLoadedMsg{Packages: allBrewPackages}
-	}
-}
-
-func updateBrew() {
-	var errOutput bytes.Buffer
-	updateCmd := exec.Command("brew", "update")
-	updateCmd.Stderr = &errOutput
-	err := updateCmd.Run()
-	if err != nil {
-		log.Printf("failed to update homebrew %v: %s", err, errOutput.String())
 	}
 }
 

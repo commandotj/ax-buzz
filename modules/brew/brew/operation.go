@@ -22,7 +22,10 @@ func RunPackageAction(ctx context.Context, action, name string, isCask bool, pro
 }
 
 func runBrew(ctx context.Context, args []string, progress func(string)) error {
-	cmd := exec.CommandContext(ctx, "brew", args...)
+	if brewExecutableErr != nil {
+		return brewExecutableErr
+	}
+	cmd := exec.CommandContext(ctx, brewExecutable, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("open Homebrew stdout: %w", err)

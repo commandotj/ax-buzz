@@ -1,8 +1,8 @@
 # RFC 0006: Buzz CLI Streaming Homebrew Operations (child of 0001)
 
-**Status:** Approved
+**Status:** Implemented
 
-**Parent:** [0001](0001-buzz-installer.md)
+**Parent:** [0001](../0001-buzz-installer.md)
 
 ## Summary
 
@@ -30,6 +30,8 @@ The CLI provides machine commands to list available packages with installed stat
 Add `--stream-json` as the app-facing mode. It accepts explicit `list`, `installed`, `refresh`, `install`, `uninstall`, and `upgrade` operations. `list` reads the formula/cask cache and combines it with a fresh local installed-state scan; it reports cache age so the app can label stale data. If no cache exists, it fetches catalog data. `refresh` explicitly bypasses the catalog cache and returns refreshed data. Read operations never invoke `brew update`; updates happen only through an explicit package upgrade operation. Existing cache paths and TUI behavior remain compatible.
 
 Each output line is one versioned JSON event: `progress`, zero or more `data` records, then exactly one terminal `result`. The terminal result carries success or failure status; process exit code remains authoritative. Standard output contains JSON only, diagnostics go to standard error, and command arguments are passed without shell interpolation. Cancellation terminates the running Homebrew process and returns a failure result. Desktop protocol validation accepts `progress`, `data`, and `result`, forwards progress/data to the frontend, and treats result as terminal. Retain `--machine handshake` as a compatibility alias while Buzz.app adopts `--stream-json`.
+
+Resolve Homebrew from the process `PATH` first, then standard installation paths, so launching Buzz.app from Finder does not depend on a shell-configured `PATH`.
 
 The macOS bundle contains the matching CLI executable at `Buzz.app/Contents/Resources/buzz`. The Wails packaging task copies it there before signing. Desktop resolves this path relative to its own executable and never searches the GUI process's `PATH`.
 

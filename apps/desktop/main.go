@@ -12,9 +12,21 @@ var assets embed.FS
 
 func main() {
 	cliService := NewCLIService()
+	var mainWindow *application.WebviewWindow
 	app := application.New(application.Options{
 		Name:        "Buzz",
 		Description: "Mac software discovery and management",
+		SingleInstance: &application.SingleInstanceOptions{
+			UniqueID: "com.commandotj.buzz",
+			OnSecondInstanceLaunch: func(application.SecondInstanceData) {
+				if mainWindow == nil {
+					return
+				}
+				mainWindow.Restore()
+				mainWindow.Show()
+				mainWindow.Focus()
+			},
+		},
 		Services: []application.Service{
 			application.NewService(cliService),
 		},
@@ -27,11 +39,12 @@ func main() {
 	})
 	cliService.SetApp(app)
 
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title:            "Buzz Installer",
+	mainWindow = app.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title:            "Buzz",
 		Width:            1160,
 		Height:           760,
 		BackgroundColour: application.NewRGB(244, 243, 239),
+		Mac:              application.MacWindow{TitleBar: application.MacTitleBarHidden},
 		URL:              "/",
 	})
 

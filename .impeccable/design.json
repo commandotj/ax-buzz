@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-17T21:58:00-07:00",
+  "title": "Design System: Buzz",
+  "extensions": {
+    "colorMeta": {
+      "sunlit-marble": {
+        "role": "neutral",
+        "displayName": "Sunlit Marble",
+        "canonical": "#f1ece2",
+        "tonalRamp": [
+          "#fbf9f3",
+          "#f1ece2",
+          "#e6dfd1",
+          "#d7e4e5",
+          "#c8c0ae",
+          "#56625e",
+          "#283a42"
+        ]
+      },
+      "aegean-blue": {
+        "role": "structure",
+        "displayName": "Aegean Blue",
+        "canonical": "#315d70",
+        "tonalRamp": [
+          "#e1e9e6",
+          "#b7cdd1",
+          "#7398a2",
+          "#315d70",
+          "#203d52"
+        ]
+      },
+      "terracotta": {
+        "role": "selection",
+        "displayName": "Terracotta",
+        "canonical": "#a64d37",
+        "tonalRamp": [
+          "#f2e3dc",
+          "#d58a70",
+          "#a64d37",
+          "#753c32"
+        ]
+      },
+      "olive": {
+        "role": "action",
+        "displayName": "Olive",
+        "canonical": "#617547",
+        "tonalRamp": [
+          "#e7ebdf",
+          "#b7c49e",
+          "#829765",
+          "#617547",
+          "#3c4d31"
+        ]
+      },
+      "midnight-aegean": {
+        "role": "dark-neutral",
+        "displayName": "Midnight Aegean",
+        "canonical": "#132940",
+        "tonalRamp": [
+          "#081526",
+          "#102941",
+          "#132940",
+          "#172f49",
+          "#203b56",
+          "#405b73"
+        ]
+      },
+      "celestial-cyan": {
+        "role": "signal",
+        "displayName": "Celestial Cyan",
+        "canonical": "#73c9e0",
+        "tonalRamp": [
+          "#102941",
+          "#1d4a65",
+          "#276780",
+          "#73c9e0",
+          "#dbf6fb"
+        ]
+      },
+      "warm-ivory": {
+        "role": "dark-text",
+        "displayName": "Warm Ivory",
+        "canonical": "#f1eadd",
+        "tonalRamp": [
+          "#746c78",
+          "#b0c0c2",
+          "#ddd6c8",
+          "#f1eadd"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "System Sans Display",
+        "purpose": "View title and selected-package title."
+      },
+      "data": {
+        "displayName": "System Monospace",
+        "purpose": "Versions, identifiers, counts, and package sources."
+      }
+    },
+    "shadows": [
+      {
+        "name": "inspector-overlay",
+        "value": "-14px 0 32px rgb(0 0 0 / 10%)",
+        "purpose": "Separate dismissible inspector from list on narrow windows."
+      },
+      {
+        "name": "confirmation-dialog",
+        "value": "0 22px 80px rgb(0 0 0 / 23%)",
+        "purpose": "Lift destructive confirmation above the workspace."
+      }
+    ],
+    "motion": [
+      {
+        "name": "inspector-slide",
+        "value": "transform 160ms ease",
+        "purpose": "Open and close the narrow-window inspector."
+      },
+      {
+        "name": "progress-spin",
+        "value": "1s linear infinite",
+        "purpose": "Indicate active CLI work."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "inspector-overlay",
+        "value": "1050px"
+      },
+      {
+        "name": "compact-navigation",
+        "value": "800px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Olive action in Light; luminous Aegean action in Dark.",
+      "html": "<button class=\"ds-primary\">Upgrade</button>",
+      "css": ".ds-primary{background:var(--action);color:var(--action-contrast);padding:0 12px;height:32px;border:1px solid var(--action);border-radius:5px;font:600 12px -apple-system,BlinkMacSystemFont,sans-serif}"
+    },
+    {
+      "name": "Appearance Selector",
+      "kind": "select",
+      "refersTo": "appearance-control",
+      "description": "System, Light, and Dark selection.",
+      "html": "<select aria-label=\"Appearance\"><option>System</option><option>Light</option><option>Dark</option></select>",
+      "css": ".ds-appearance{background:var(--surface);color:var(--foreground);border:1px solid var(--divider);border-radius:5px;height:32px}"
+    },
+    {
+      "name": "Celestial Package Detail",
+      "kind": "custom",
+      "refersTo": "inspector-mark",
+      "description": "Orbital mark sits within light marble or dark enamel surfaces.",
+      "html": "<span class=\"inspector-mark\" aria-hidden=\"true\"><svg viewBox=\"0 0 24 24\"></svg></span>",
+      "css": ".ds-inspector-mark{border:1px solid var(--bronze);border-radius:50%;background:var(--inspector);color:var(--blue)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Greek Celestial Instrument",
+    "overview": "A Homebrew library from a future Greek observatory. Architectural rhythm, painted ceramic color, and measured orbital geometry give the shell its identity while package data stays first. Light layers sunlit marble, Aegean blue, terracotta, olive, and fine bronze. Dark layers midnight Aegean, indigo enamel, cyan signals, terracotta, and warm ivory. System follows macOS; explicit appearances persist.",
+    "keyCharacteristics": [
+      "Package data first; no promotional hero.",
+      "Light and Dark use separate complete surface palettes.",
+      "Architecture and orbital geometry appear as restrained shell details.",
+      "Main window fixed; list and inspector own scrolling.",
+      "Homebrew operations stay in the Buzz CLI."
+    ],
+    "rules": [
+      {
+        "name": "The Instrument Rule",
+        "body": "Architectural rhythm and orbital marks belong in shell and selected-package detail; package data remains dominant.",
+        "section": "layout"
+      },
+      {
+        "name": "The Material Rule",
+        "body": "Light uses sunlit marble and pale ceramic throughout; Dark uses deep Aegean and enamel throughout.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Keep package names, versions, sources, and actions immediately scannable.",
+      "Use terracotta for selection and olive/cyan for primary actions by appearance.",
+      "Keep keyboard focus and status labels visible in both appearances."
+    ],
+    "donts": [
+      "Do not mix dark panels into Light or marble-white panels into Dark.",
+      "Do not use repeated meander as a decorative border.",
+      "Do not use broad neon glow, glass blur, gold gradients, or game UI motifs."
+    ]
+  }
+}

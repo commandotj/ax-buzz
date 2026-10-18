@@ -1,0 +1,12 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title description">
+  <title id="title">Buzz Greek celestial monogram</title>
+  <desc id="description">A marble B monogram with a squared Greek key counter and one terracotta orbital marker on an Aegean field.</desc>
+  <g id="icon">
+    <rect x="12" y="12" width="488" height="488" rx="112" fill="#315d70"/>
+    <path d="M86 256a170 170 0 0 1 340 0" fill="none" stroke="#9b8354" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="421" cy="256" r="20" fill="#a64d37" stroke="#f1ece2" stroke-width="8"/>
+    <path fill="#f1ece2" fill-rule="evenodd" d="M151 112h135c62 0 98 33 98 86 0 34-17 59-47 72 40 12 63 41 63 84 0 59-42 94-111 94H151V112Zm58 52v82h72c31 0 47-14 47-41 0-26-17-41-47-41h-72Zm0 132v100h77c37 0 55-17 55-49 0-33-20-51-57-51h-75Z"/>
+    <path d="M171 120v29h-20v-29h-18v47h38v-18h18v18h-18v19h38v-66h-38Z" fill="#617547"/>
+    <path d="M171 392v-29h-20v29h-18v-47h38v18h18v-18h-18v-19h38v66h-38Z" fill="#617547"/>
+  </g>
+</svg>

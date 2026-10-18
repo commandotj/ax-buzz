@@ -2,6 +2,7 @@ package brew
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -36,13 +37,31 @@ type installReceipt struct {
 	} `json:"source"`
 }
 
+var brewExecutable, brewExecutableErr = findBrewExecutable()
+
 var brewPrefix = func() string {
-	bytes, err := exec.Command("brew", "--prefix").Output()
+	if brewExecutableErr != nil {
+		return ""
+	}
+	bytes, err := exec.Command(brewExecutable, "--prefix").Output()
 	if err != nil {
 		return ""
 	}
 	return strings.TrimSpace(string(bytes))
 }()
+
+func findBrewExecutable() (string, error) {
+	if path, err := exec.LookPath("brew"); err == nil {
+		return path, nil
+	}
+	for _, path := range []string{"/opt/homebrew/bin/brew", "/usr/local/bin/brew", "/home/linuxbrew/.linuxbrew/bin/brew"} {
+		info, err := os.Stat(path)
+		if err == nil && !info.IsDir() {
+			return path, nil
+		}
+	}
+	return "", fmt.Errorf("Homebrew executable not found in PATH or standard install locations")
+}
 
 var pinnedPackages = func() map[string]bool {
 	formulae := make(map[string]bool)

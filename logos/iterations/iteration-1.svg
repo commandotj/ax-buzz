@@ -1,0 +1,20 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Buzz Antikythera instrument icon, iteration 1</title>
+  <desc id="desc">A simplified Greek celestial mechanism with three orbital bands, a brass instrument dial, and one orbiting star.</desc>
+  <g id="icon">
+    <circle cx="256" cy="256" r="232" fill="#132940"/>
+
+    <path d="M256 38a218 218 0 0 1 189 109l-34 20A179 179 0 0 0 256 77z" fill="#9b8354"/>
+    <path d="M445 365a218 218 0 0 1-189 109v-39a179 179 0 0 0 155-89z" fill="#a64d37"/>
+    <path d="M67 365a218 218 0 0 1 0-218l34 20a179 179 0 0 0 0 178z" fill="#617547"/>
+
+    <circle cx="256" cy="256" r="143" fill="none" stroke="#73c9e0" stroke-width="28"/>
+    <circle cx="256" cy="256" r="91" fill="#132940" stroke="#f1ece2" stroke-width="14"/>
+    <circle cx="256" cy="256" r="62" fill="#315d70" stroke="#9b8354" stroke-width="14"/>
+    <path d="M256 194v124M194 256h124" fill="none" stroke="#9b8354" stroke-width="14" stroke-linecap="round"/>
+    <circle cx="256" cy="256" r="25" fill="#a64d37" stroke="#f1ece2" stroke-width="8"/>
+
+    <path d="m360 89 19 48 48 19-48 19-19 48-19-48-48-19 48-19z" fill="#a64d37" stroke="#f1ece2" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="367" cy="377" r="17" fill="#73c9e0" stroke="#f1ece2" stroke-width="7"/>
+  </g>
+</svg>

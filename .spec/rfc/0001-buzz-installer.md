@@ -24,9 +24,10 @@ Non-Homebrew package ecosystems, remote account services, and changes to Homebre
 
 | RFC | Concern |
 |-----|---------|
+| [0009](0009-sci-fi-greek-visual-system.md) | Buzz Desktop Sci-Fi Greek Visual System |
 | [0008](0008-desktop-software-ui.md) | Buzz Desktop Software Management UI |
 | [0007](completed/0007-go-function-modules.md) | Buzz Go Function Modules |
-| [0006](0006-streaming-homebrew-cli.md) | Buzz CLI Streaming Homebrew Operations |
+| [0006](completed/0006-streaming-homebrew-cli.md) | Buzz CLI Streaming Homebrew Operations |
 | [0007](completed/0007-go-function-modules.md) | Buzz Go Function Modules |
 | [0008](0008-desktop-software-ui.md) | Buzz Desktop Software Management UI |
 | [0005](0005-buzz-cli-desktop-shell.md) | Buzz CLI and Desktop Shell Integration |

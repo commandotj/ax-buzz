@@ -13,6 +13,12 @@ require (
 	github.com/spf13/pflag v1.0.10
 )
 
+replace github.com/commandotj/ax-buzz/modules/brew => ../../modules/brew
+
+replace github.com/commandotj/ax-buzz/modules/gh => ../../modules/gh
+
+replace github.com/commandotj/ax-buzz/modules/protocol => ../../modules/protocol
+
 require (
 	github.com/atotto/clipboard v0.1.4 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect

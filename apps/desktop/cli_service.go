@@ -38,20 +38,35 @@ func (s *CLIService) SetApp(app *application.App) {
 }
 
 func (s *CLIService) StartHandshake() error {
+	return s.start([]string{"--machine", "handshake"})
+}
+
+func (s *CLIService) StartOperation(operation, packageName string, isCask bool) error {
+	args := []string{"--stream-json", operation}
+	if packageName != "" {
+		args = append(args, packageName)
+	}
+	if isCask {
+		args = append(args, "--cask")
+	}
+	return s.start(args)
+}
+
+func (s *CLIService) start(args []string) error {
 	s.mu.Lock()
 	if s.cancel != nil {
 		s.mu.Unlock()
-		return fmt.Errorf("Buzz CLI check already running")
+		return fmt.Errorf("Buzz CLI operation already running")
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	s.cancel = cancel
 	s.mu.Unlock()
 
-	go s.runHandshake(ctx)
+	go s.runCLI(ctx, args)
 	return nil
 }
 
-func (s *CLIService) CancelHandshake() bool {
+func (s *CLIService) CancelOperation() bool {
 	s.mu.Lock()
 	cancel := s.cancel
 	s.mu.Unlock()
@@ -62,12 +77,16 @@ func (s *CLIService) CancelHandshake() bool {
 	return true
 }
 
+func (s *CLIService) CancelHandshake() bool {
+	return s.CancelOperation()
+}
+
 func (s *CLIService) ServiceShutdown() error {
 	s.CancelHandshake()
 	return nil
 }
 
-func (s *CLIService) runHandshake(ctx context.Context) {
+func (s *CLIService) runCLI(ctx context.Context, args []string) {
 	defer func() {
 		s.mu.Lock()
 		s.cancel = nil
@@ -79,7 +98,13 @@ func (s *CLIService) runHandshake(ctx context.Context) {
 		s.emitError(err.Error())
 		return
 	}
-	cmd := exec.CommandContext(ctx, cliPath, "--machine", "handshake")
+	cmd := exec.CommandContext(ctx, cliPath, args...)
+	cmd.Cancel = func() error {
+		if cmd.Process == nil {
+			return nil
+		}
+		return cmd.Process.Signal(os.Interrupt)
+	}
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		s.emitError(fmt.Sprintf("start Buzz CLI output: %v", err))
@@ -122,7 +147,11 @@ func (s *CLIService) runHandshake(ctx context.Context) {
 	}
 	waitErr := cmd.Wait()
 	if ctx.Err() != nil {
-		s.emitError("Buzz CLI check cancelled")
+		if resultEvent != nil {
+			s.emit(*resultEvent)
+		} else {
+			s.emitError("Buzz CLI operation cancelled")
+		}
 		return
 	}
 	if protocolErr != nil {
@@ -130,6 +159,10 @@ func (s *CLIService) runHandshake(ctx context.Context) {
 		return
 	}
 	if waitErr != nil {
+		if resultEvent != nil {
+			s.emit(*resultEvent)
+			return
+		}
 		message := strings.TrimSpace(stderr.String())
 		if message == "" {
 			message = waitErr.Error()

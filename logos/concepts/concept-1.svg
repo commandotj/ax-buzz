@@ -1,0 +1,40 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Buzz Antikythera orbital mechanism</title>
+  <desc id="desc">A colorful Greek celestial instrument with concentric bronze and Aegean rings and an orbiting package star.</desc>
+  <g id="icon">
+    <!-- A solid midnight medallion keeps the mark legible on either theme. -->
+    <circle cx="256" cy="256" r="224" fill="#132940"/>
+
+    <!-- Outer instrument bezel: broad arcs echo an engraved astrolabe scale. -->
+    <path d="M256 57a199 199 0 0 1 171 97l-26 15a169 169 0 0 0-145-82z" fill="#9b8354"/>
+    <path d="M427 358a199 199 0 0 1-171 97v-30a169 169 0 0 0 145-82z" fill="#a64d37"/>
+    <path d="M85 358a199 199 0 0 1 0-204l26 15a169 169 0 0 0 0 174z" fill="#617547"/>
+
+    <!-- Inner celestial rings leave deliberate gaps for a mechanical, not generic, orbit. -->
+    <path d="M256 108a148 148 0 0 1 128 74l-26 15a118 118 0 0 0-102-59z" fill="#f1ece2"/>
+    <path d="M384 330a148 148 0 0 1-128 74v-30a118 118 0 0 0 102-59z" fill="#73c9e0"/>
+    <path d="M128 330a148 148 0 0 1 0-148l26 15a118 118 0 0 0 0 118z" fill="#315d70"/>
+
+    <!-- Gear teeth as large, readable index marks. -->
+    <path d="M242 76h28v40h-28zM242 396h28v40h-28zM76 242h40v28H76zM396 242h40v28h-40z" fill="#9b8354"/>
+    <path d="m135 126 20-20 29 29-20 20zM357 377l20-20 29 29-20 20zM357 135l29-29 20 20-29 29zM106 386l29-29 20 20-29 29z" fill="#9b8354"/>
+
+    <!-- Central axis and brass pivot. -->
+    <circle cx="256" cy="256" r="91" fill="#315d70" stroke="#f1ece2" stroke-width="8"/>
+    <circle cx="256" cy="256" r="66" fill="#132940" stroke="#9b8354" stroke-width="10"/>
+    <path d="M256 190v132M190 256h132" fill="none" stroke="#9b8354" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="256" cy="256" r="23" fill="#a64d37" stroke="#f1ece2" stroke-width="7"/>
+    <circle cx="256" cy="256" r="7" fill="#f1ece2"/>
+
+    <!-- Orbiting package-star: unmistakable Homebrew parcel, crowned by a celestial point. -->
+    <path d="M339 160 350 132l11 28 29 11-29 11-11 29-11-29-29-11z" fill="#a64d37" stroke="#f1ece2" stroke-width="6" stroke-linejoin="round"/>
+    <path d="m336 222 31 0 16 16v31h-47z" fill="#f1ece2" stroke="#132940" stroke-width="7" stroke-linejoin="round"/>
+    <path d="m336 222 16 16h31M352 238v31" fill="none" stroke="#315d70" stroke-width="7" stroke-linejoin="round"/>
+    <path d="M350 222v-12" stroke="#9b8354" stroke-width="7" stroke-linecap="round"/>
+
+    <!-- Three broad constellation studs balance the rotating mass. -->
+    <circle cx="178" cy="169" r="12" fill="#73c9e0" stroke="#132940" stroke-width="5"/>
+    <circle cx="347" cy="346" r="12" fill="#a64d37" stroke="#f1ece2" stroke-width="5"/>
+    <circle cx="163" cy="338" r="12" fill="#9b8354" stroke="#132940" stroke-width="5"/>
+  </g>
+</svg>

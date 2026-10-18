@@ -77,7 +77,11 @@ func execute(BrewCommand BrewCommand, pkgs []*data.Package, args ...string) tea.
 			}
 
 			ch <- CommandOutputMsg{Ch: ch, Line: "> " + cmdLine}
-			cmd := exec.Command("brew", args...)
+			if brewExecutableErr != nil {
+				ch <- CommandFinishMsg{Err: brewExecutableErr}
+				return
+			}
+			cmd := exec.Command(brewExecutable, args...)
 			// Connect to stdout and stderr
 			stdout, err := cmd.StdoutPipe()
 			if err != nil {

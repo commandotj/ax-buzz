@@ -13,10 +13,18 @@ export function CancelHandshake(): $CancellablePromise<boolean> {
     return $Call.ByID(3943494390);
 }
 
+export function CancelOperation(): $CancellablePromise<boolean> {
+    return $Call.ByID(966581526);
+}
+
 export function SetApp(app: application$0.App | null): $CancellablePromise<void> {
     return $Call.ByID(779840272, app);
 }
 
 export function StartHandshake(): $CancellablePromise<void> {
     return $Call.ByID(3791034530);
+}
+
+export function StartOperation(operation: string, packageName: string, isCask: boolean): $CancellablePromise<void> {
+    return $Call.ByID(3815086338, operation, packageName, isCask);
 }

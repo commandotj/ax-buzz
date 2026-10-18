@@ -33,7 +33,7 @@ The app runs locally on macOS inside a Wails 3 shell. It bundles and invokes a m
 
 ## Brand Commitments
 
-Product name is Buzz. No visual identity, palette, or typography has been confirmed. Existing handshake screen is a placeholder and not a design authority.
+Product name is Buzz. The desktop interface uses a restrained Night City visual reference: graphite surfaces, cyan active states, and yellow update signals. Do not reproduce Cyberpunk 2077 screens, logos, or fictional brands. Existing handshake screen is a placeholder and not a design authority.
 
 ## Evidence on Hand
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	_ "embed"
 	"context"
+	_ "embed"
 	"fmt"
 	"io"
 	"log"
@@ -110,7 +110,7 @@ func runStreamJSON(output io.Writer, diagnostics io.Writer, args []string) error
 		_ = writer.Progress(map[string]string{"message": message})
 	}
 	forceRefresh := operation.name == "refresh"
-	snapshot, err := brew.LoadPackages(forceRefresh, progress)
+	snapshot, err := brew.LoadPackages(ctx, forceRefresh, progress)
 	if err != nil {
 		return finishStream(writer, diagnostics, err)
 	}
@@ -136,10 +136,17 @@ func runStreamJSON(output io.Writer, diagnostics io.Writer, args []string) error
 	if operation.name == "installed" {
 		packages = installedPackages(packages)
 	}
-	for _, pkg := range packages {
-		if err := writer.Data(pkg); err != nil {
+	for start := 0; start < len(packages); start += 100 {
+		if err := ctx.Err(); err != nil {
+			return finishStream(writer, diagnostics, err)
+		}
+		end := min(start+100, len(packages))
+		if err := writer.Data(map[string]any{"packages": packages[start:end]}); err != nil {
 			return fmt.Errorf("write package data: %w", err)
 		}
+	}
+	if err := ctx.Err(); err != nil {
+		return finishStream(writer, diagnostics, err)
 	}
 	return writer.Result(map[string]any{
 		"success":         true,

@@ -1,6 +1,7 @@
 package brew
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,7 +16,7 @@ type CatalogSnapshot struct {
 	Stale    bool
 }
 
-func LoadPackages(forceRefresh bool, progress func(string)) (*CatalogSnapshot, error) {
+func LoadPackages(ctx context.Context, forceRefresh bool, progress func(string)) (*CatalogSnapshot, error) {
 	formulae := make(chan []*apiFormula, 1)
 	casks := make(chan []*apiCask, 1)
 	formulaInstalls := make(chan []*installInfo, 1)
@@ -27,8 +28,8 @@ func LoadPackages(forceRefresh bool, progress func(string)) (*CatalogSnapshot, e
 		progress("Loading Homebrew cask catalog")
 		progress("Scanning installed formulae and casks")
 	}
-	go fetchFormula(formulae, errors, forceRefresh)
-	go fetchCask(casks, errors, forceRefresh)
+	go fetchFormula(ctx, formulae, errors, forceRefresh)
+	go fetchCask(ctx, casks, errors, forceRefresh)
 	go fetchInstalledFormula(false, formulaInstalls)
 	go fetchInstalledCask(false, caskInstalls)
 
@@ -48,6 +49,8 @@ func LoadPackages(forceRefresh bool, progress func(string)) (*CatalogSnapshot, e
 			completed++
 		case err := <-errors:
 			return nil, err
+		case <-ctx.Done():
+			return nil, ctx.Err()
 		}
 	}
 
