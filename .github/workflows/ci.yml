@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  push:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  development-source:
+    name: Development source
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require same-repository feature source
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [[ "$HEAD_REF" != feature/* || "$HEAD_REPOSITORY" != "$BASE_REPOSITORY" ]]; then
+            echo "Development pull requests must come from a feature/* branch in this repository."
+            exit 1
+          fi
+
+  promotion-source:
+    name: Promotion source
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require same-repository develop source
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          BASE_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [[ "$HEAD_REF" != "develop" || "$HEAD_REPOSITORY" != "$BASE_REPOSITORY" ]]; then
+            echo "Production pull requests must come from this repository's develop branch."
+            exit 1
+          fi
+
+  verify:
+    name: Verify
+    needs: [development-source, promotion-source]
+    if: >-
+      always() &&
+      (github.event_name != 'pull_request' ||
+      (github.base_ref == 'develop' && needs.development-source.result == 'success') ||
+      (github.base_ref == 'main' && needs.promotion-source.result == 'success'))
+    runs-on: macos-15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.25.6'
+          cache-dependency-path: '**/go.sum'
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          version: 10.11.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Check Go formatting
+        run: make fmt-check
+
+      - name: Test Go workspace
+        run: make test
+
+      - name: Vet Go workspace
+        run: make vet
+
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Wails CLI
+        run: pnpm setup:wails
+
+      - name: Build Buzz.app DMG
+        run: pnpm --filter @buzz/desktop package:dmg

@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "node scripts/wails.mjs task dev",
-    "build": "node scripts/wails.mjs task package"
+    "build": "node scripts/wails.mjs task package",
+    "package:dmg": "node scripts/wails.mjs task darwin:package:dmg"
   },
   "devDependencies": {
     "@buzz/cli": "workspace:*"
