@@ -1,6 +1,6 @@
 # RFC 0006: Buzz CLI Streaming Homebrew Operations (child of 0001)
 
-**Status:** Draft
+**Status:** Approved
 
 **Parent:** [0001](0001-buzz-installer.md)
 
