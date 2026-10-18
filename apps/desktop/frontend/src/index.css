@@ -101,10 +101,8 @@
 .brand-lockup { display: flex; align-items: center; gap: 11px; padding: 0 7px; }
 .brand-lockup strong { display: block; color: var(--foreground); font: 600 19px/1.1 Georgia, "Times New Roman", serif; letter-spacing: .025em; letter-spacing: -.03em; }
 .brand-lockup span { display: block; margin-top: 4px; color: var(--secondary-text); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; }
-.brand-mark { position: relative; display: grid; width: 37px; height: 42px; place-items: center; border-top: 3px double var(--bronze); border-bottom: 3px double var(--bronze); border-radius: 2px; background: color-mix(in srgb, var(--surface) 40%, transparent); color: var(--blue); }
-.brand-mark::before, .brand-mark::after { position: absolute; right: 0; left: 0; height: 1px; background: var(--bronze); content: ""; }
-.brand-mark::before { top: 4px; }
-.brand-mark::after { bottom: 4px; }
+.brand-mark { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; }
+.brand-mark img { display: block; width: 42px; height: 42px; object-fit: contain; }
 .sidebar-rule { height: 1px; margin: 21px 0 22px; background: color-mix(in srgb, var(--bronze) 42%, var(--divider)); }
 .nav-heading { margin: 0 9px 10px; color: var(--secondary-text); font-size: 10px; font-weight: 700; letter-spacing: .1em; }
 .nav-list { display: grid; gap: 4px; }

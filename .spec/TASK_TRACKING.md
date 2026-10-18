@@ -14,3 +14,4 @@
 
 ## Done
 - [x] Implement RFC 0010: Single Buzz Desktop Instance (RFC 0010)
+- [x] Implement RFC 0011: Use the Buzz app icon in the app shell (RFC 0011)

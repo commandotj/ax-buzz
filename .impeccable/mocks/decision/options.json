@@ -1,0 +1,66 @@
+{
+  "title": "Buzz \u2014 Greek Sci-Fi themes",
+  "question": "These are two complete appearances of one Buzz design, not competing products: sunlit marble Light and deep-space Dark. Inspect each independently; System selects the complete appearance from macOS.",
+  "options": [
+    {
+      "id": "assigned",
+      "kind": "assigned",
+      "label": "Light \u2014 Sunlit Marble",
+      "kicker": "THE ROLL",
+      "lineage": "Aegean civic architecture, painted Greek ceramic, and celestial instruments",
+      "thesis": "A sunlit Homebrew library, built from pale stone, Aegean pigment, and exact orbital geometry.",
+      "palette": [
+        "#f1ece2",
+        "#d7e4e5",
+        "#315d70",
+        "#a64d37",
+        "#617547",
+        "#9b8354"
+      ],
+      "materials": [
+        "sunlit marble",
+        "Aegean ceramic",
+        "terracotta glaze",
+        "fine bronze rules"
+      ],
+      "viewport": "A complete light appearance: pale navigation, marble content, pale inspector, terracotta selection, olive actions, and small orbital instrument marks.",
+      "risk": "Classical cues become costume if architectural proportion and celestial precision turn into borders and badges.",
+      "html": ".impeccable/mocks/decision/assigned.html"
+    },
+    {
+      "id": "dark",
+      "kind": "dealt",
+      "label": "Dark \u2014 Celestial Aegean",
+      "lineage": "Aegean night sky, indigo enamel, and precision celestial instruments",
+      "thesis": "A deep-space Homebrew library, with luminous signals held against layered Aegean enamel.",
+      "palette": [
+        "#081526",
+        "#132940",
+        "#274d6d",
+        "#63b7dc",
+        "#e27c61",
+        "#d8b980"
+      ],
+      "materials": [
+        "midnight Aegean enamel",
+        "lapis and indigo",
+        "ion-blue indicators",
+        "aged bronze"
+      ],
+      "viewport": "A complete dark appearance: deep navigation, deep content, dark indigo inspector, cyan focus signals, coral actions, and warm ivory data.",
+      "risk": "Broad glow or bright panels would break the observatory atmosphere and destroy dark-theme consistency.",
+      "html": ".impeccable/mocks/decision/dark.html"
+    }
+  ],
+  "reroll": {
+    "registers": [
+      "safer",
+      "bolder"
+    ]
+  },
+  "buildPath": {
+    "value": "code",
+    "toggle": false
+  },
+  "canon": false
+}

@@ -12,3 +12,4 @@
 | 0008 | [Buzz Desktop Software Management UI (child of 0001)](rfc/0008-desktop-software-ui.md) | Approved |
 | 0009 | [Buzz Desktop Sci-Fi Greek Visual System (child of 0001)](rfc/0009-sci-fi-greek-visual-system.md) | Approved |
 | 0010 | [Single Buzz Desktop Instance](rfc/completed/0010-single-instance-desktop.md) | Implemented |
+| 0011 | [Use the Buzz app icon in the app shell](rfc/completed/0011-shared-ui-brand-icon.md) | Implemented |

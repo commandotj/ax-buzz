@@ -1,0 +1,15 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Buzz Antikythera instrument icon, iteration 2</title>
+  <desc id="desc">Complete bronze, cyan, and marble orbital cycles around a Greek celestial mechanism, with a transparent canvas.</desc>
+  <g id="icon">
+    <circle cx="256" cy="256" r="215" fill="none" stroke="#9b8354" stroke-width="22"/>
+    <circle cx="256" cy="256" r="159" fill="none" stroke="#73c9e0" stroke-width="24"/>
+    <circle cx="256" cy="256" r="103" fill="none" stroke="#f1ece2" stroke-width="15"/>
+    <circle cx="256" cy="256" r="69" fill="none" stroke="#9b8354" stroke-width="13"/>
+    <path d="M256 187v138M187 256h138" fill="none" stroke="#9b8354" stroke-width="15" stroke-linecap="round"/>
+    <circle cx="256" cy="256" r="27" fill="#a64d37" stroke="#f1ece2" stroke-width="8"/>
+
+    <path d="m365 48 18 46 46 18-46 18-18 46-18-46-46-18 46-18z" fill="#a64d37" stroke="#f1ece2" stroke-width="8" stroke-linejoin="round"/>
+    <circle cx="407" cy="373" r="20" fill="#617547" stroke="#f1ece2" stroke-width="8"/>
+  </g>
+</svg>

@@ -3,8 +3,9 @@ import { Events } from "@wailsio/runtime";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Check, ChevronRight, CircleAlert, Download, LoaderCircle,
-  Orbit, Package, RefreshCw, Search, Settings2, Trash2, Upload,
+  Package, RefreshCw, Search, Settings2, Trash2, Upload,
 } from "lucide-react";
+import buzzIcon from "../../../../logos/export/icon.svg";
 import { CLIService } from "../bindings/github.com/commandotj/ax-buzz/apps/desktop";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -182,7 +183,7 @@ function App() {
     <div className={`app-shell ${macOSWindow ? "macos-shell" : ""}`}>
       {macOSWindow && <header className="window-chrome" aria-label="Buzz window"><span className="traffic-light-reserve" aria-hidden="true" /><strong>Buzz</strong><span className="window-chrome-context">HOMEBREW</span></header>}
       <aside className="sidebar" aria-label="Main navigation">
-        <div className="brand-lockup"><div className="brand-mark" aria-hidden="true"><Orbit size={22} strokeWidth={1.5} /></div><div><strong>Buzz</strong><span>Homebrew library</span></div></div>
+        <div className="brand-lockup"><div className="brand-mark" aria-hidden="true"><img src={buzzIcon} alt="" /></div><div><strong>Buzz</strong><span>Homebrew library</span></div></div>
         <Separator className="sidebar-rule" />
         <p className="nav-heading">LIBRARY</p>
         <nav className="nav-list">
