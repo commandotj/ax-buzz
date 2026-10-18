@@ -80,14 +80,17 @@ jobs:
       - name: Check Go formatting
         run: make fmt-check
 
+      - name: Install JavaScript dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build embedded desktop frontend
+        run: pnpm --filter @buzz/desktop-frontend build
+
       - name: Test Go workspace
         run: make test
 
       - name: Vet Go workspace
         run: make vet
-
-      - name: Install JavaScript dependencies
-        run: pnpm install --frozen-lockfile
 
       - name: Install Wails CLI
         run: pnpm setup:wails

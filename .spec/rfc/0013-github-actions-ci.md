@@ -24,7 +24,7 @@ GitHub Release creation, release asset upload, desktop signing/notarization, Hom
 
 Add `.github/workflows/ci.yml` with `pull_request` targeting `main` and `push` targeting `main`. Use a macOS runner because Buzz.app is a macOS product and its build requires Xcode tooling. Install Go 1.25.6 from `go.work`, Node 22, and pnpm 10.11.0 from `package.json`. Install dependencies with the lockfile and run the repository's existing commands.
 
-Extend Makefile `test` and `vet` targets to cover `apps/cli` and all modules in `go.work`; add a non-mutating formatting check so local and hosted validation use the same entry points. Run those targets, then run `pnpm install --frozen-lockfile`, `pnpm setup:wails`, and `pnpm build`. Keep workflow `permissions` read-only. Do not configure branch protection here: workflow checks run automatically, while making them merge-blocking requires repository rules and stable check names after first hosted run.
+Extend Makefile `test` and `vet` targets to cover `apps/cli` and all modules in `go.work`; add a non-mutating formatting check so local and hosted validation use the same entry points. Install JavaScript dependencies and build `@buzz/desktop-frontend` before Go tests because `apps/desktop` embeds `frontend/dist`. Then run Go test/vet, install Wails, and build the Buzz.app DMG. Keep workflow `permissions` read-only. Do not configure branch protection here: workflow checks run automatically, while making them merge-blocking requires repository rules and stable check names after first hosted run.
 
 ## Acceptance
 
