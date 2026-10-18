@@ -48,9 +48,9 @@ func LoadData(fetchAnalytics, fetchSize bool, loadingPrgs *loading.LoadingProgre
 		var caskAnalytics90d apiCaskAnalytics
 		var formulaInstallInfo, caskInstallInfo []*installInfo
 
-		go fetchFormula(formulaeChan, errChan)
+		go fetchFormula(formulaeChan, errChan, *flagInvalidateCache)
 		loadingPrgs.AddTask(formulaeChan, "Loading all Formulae")
-		go fetchCask(casksChan, errChan)
+		go fetchCask(casksChan, errChan, *flagInvalidateCache)
 		loadingPrgs.AddTask(casksChan, "Loading all Casks")
 		if fetchAnalytics {
 			go fetchFormulaAnalytics(formulaAnalytics90dChan, errChan)

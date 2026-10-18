@@ -104,24 +104,26 @@ type apiCaskAnalytics struct {
 	} `json:"items"`
 }
 
-func fetchFormula(dataChan chan []*apiFormula, errChan chan error) {
+func fetchFormula(dataChan chan []*apiFormula, errChan chan error, forceRefresh bool) {
 	target := []*apiFormula{}
 	fetchJwsJsonWithCache(
 		apiFormulaURL,
 		filepath.Join(taproomCacheDir, formulaJwsJson),
 		&target,
 		dataChan,
-		errChan)
+		errChan,
+		forceRefresh)
 }
 
-func fetchCask(dataChan chan []*apiCask, errChan chan error) {
+func fetchCask(dataChan chan []*apiCask, errChan chan error, forceRefresh bool) {
 	target := []*apiCask{}
 	fetchJwsJsonWithCache(
 		apiCaskURL,
 		filepath.Join(taproomCacheDir, caskJwsJson),
 		&target,
 		dataChan,
-		errChan)
+		errChan,
+		forceRefresh)
 }
 
 func fetchFormulaAnalytics(dataChan chan apiFormulaAnalytics, errChan chan error) {
@@ -131,7 +133,8 @@ func fetchFormulaAnalytics(dataChan chan apiFormulaAnalytics, errChan chan error
 		filepath.Join(taproomCacheDir, formulaAnalyticsJson),
 		&target,
 		dataChan,
-		errChan)
+		errChan,
+		*flagInvalidateCache)
 }
 
 func fetchCaskAnalytics(dataChan chan apiCaskAnalytics, errChan chan error) {
@@ -141,18 +144,17 @@ func fetchCaskAnalytics(dataChan chan apiCaskAnalytics, errChan chan error) {
 		filepath.Join(taproomCacheDir, caskAnalyticsJson),
 		&target,
 		dataChan,
-		errChan)
+		errChan,
+		*flagInvalidateCache)
 }
 
 func readCacheData(cachePath string) []byte {
-	if info, err := os.Stat(cachePath); err == nil && time.Since(info.ModTime()) < urlCacheTtl {
-		file, err := os.Open(cachePath)
+	file, err := os.Open(cachePath)
+	if err == nil {
+		defer file.Close()
+		body, err := io.ReadAll(file)
 		if err == nil {
-			defer file.Close()
-			body, err := io.ReadAll(file)
-			if err == nil {
-				return body
-			}
+			return body
 		}
 	}
 
@@ -160,8 +162,8 @@ func readCacheData(cachePath string) []byte {
 }
 
 // Fetch a JWS json and parse its payload to target
-func fetchJwsJsonWithCache[T any](url, cachePath string, target *T, dataChan chan T, errChan chan error) {
-	data, err := fetchUrlWithCache(url, cachePath)
+func fetchJwsJsonWithCache[T any](url, cachePath string, target *T, dataChan chan T, errChan chan error, forceRefresh bool) {
+	data, err := fetchUrlWithCache(url, cachePath, forceRefresh)
 	if err != nil {
 		errChan <- err
 		return
@@ -179,8 +181,8 @@ func fetchJwsJsonWithCache[T any](url, cachePath string, target *T, dataChan cha
 }
 
 // A generic function to fetch and decode Json from a URL, with caching.
-func fetchJsonWithCache[T any](url, cachePath string, target *T, dataChan chan T, errChan chan error) {
-	data, err := fetchUrlWithCache(url, cachePath)
+func fetchJsonWithCache[T any](url, cachePath string, target *T, dataChan chan T, errChan chan error, forceRefresh bool) {
+	data, err := fetchUrlWithCache(url, cachePath, forceRefresh)
 	if err != nil {
 		errChan <- err
 		return
@@ -192,9 +194,9 @@ func fetchJsonWithCache[T any](url, cachePath string, target *T, dataChan chan T
 	dataChan <- *target
 }
 
-func fetchUrlWithCache(url, cachePath string) ([]byte, error) {
+func fetchUrlWithCache(url, cachePath string, forceRefresh bool) ([]byte, error) {
 	var jsonData []byte
-	if !*flagInvalidateCache {
+	if !forceRefresh {
 		jsonData = readCacheData(cachePath)
 	}
 	if jsonData != nil {

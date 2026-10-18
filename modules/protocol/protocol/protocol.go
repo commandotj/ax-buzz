@@ -26,6 +26,10 @@ func (w *Writer) Progress(data any) error {
 	return w.encoder.Encode(Event{ProtocolVersion: Version, Event: "progress", Data: data})
 }
 
+func (w *Writer) Data(data any) error {
+	return w.encoder.Encode(Event{ProtocolVersion: Version, Event: "data", Data: data})
+}
+
 func (w *Writer) Result(data any) error {
 	return w.encoder.Encode(Event{ProtocolVersion: Version, Event: "result", Data: data})
 }
@@ -37,7 +41,7 @@ func ValidateEvent(version int, event string, hasData bool, resultSeen bool) err
 	if resultSeen {
 		return fmt.Errorf("Buzz CLI emitted data after its result event")
 	}
-	if event != "progress" && event != "result" {
+	if event != "progress" && event != "data" && event != "result" {
 		return fmt.Errorf("unknown Buzz CLI event %q", event)
 	}
 	if !hasData {

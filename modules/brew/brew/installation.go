@@ -2,7 +2,6 @@ package brew
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -40,13 +39,16 @@ type installReceipt struct {
 var brewPrefix = func() string {
 	bytes, err := exec.Command("brew", "--prefix").Output()
 	if err != nil {
-		panic(fmt.Sprintf("failed to locate homebrew path: %v", err))
+		return ""
 	}
 	return strings.TrimSpace(string(bytes))
 }()
 
 var pinnedPackages = func() map[string]bool {
 	formulae := make(map[string]bool)
+	if brewPrefix == "" {
+		return formulae
+	}
 
 	dir := filepath.Join(brewPrefix, "var/homebrew/pinned")
 	entries, err := os.ReadDir(dir)
@@ -61,6 +63,10 @@ var pinnedPackages = func() map[string]bool {
 }()
 
 func fetchInstalledFormula(fetchSize bool, resultCh chan []*installInfo) {
+	if brewPrefix == "" {
+		resultCh <- []*installInfo{}
+		return
+	}
 	fetchInstalledPackages(
 		filepath.Join(brewPrefix, "Cellar"),
 		func(path string) *installInfo { return getFormulaInstallInfo(fetchSize, path) },
@@ -68,6 +74,10 @@ func fetchInstalledFormula(fetchSize bool, resultCh chan []*installInfo) {
 }
 
 func fetchInstalledCask(fetchSize bool, resultCh chan []*installInfo) {
+	if brewPrefix == "" {
+		resultCh <- []*installInfo{}
+		return
+	}
 	fetchInstalledPackages(
 		filepath.Join(brewPrefix, "Caskroom"),
 		func(path string) *installInfo { return getCaskInstallInfo(fetchSize, path) },
