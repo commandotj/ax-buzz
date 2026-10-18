@@ -1,0 +1,11 @@
+{
+  "name": "@buzz/desktop",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/wails.mjs task dev",
+    "build": "node scripts/wails.mjs task package"
+  },
+  "devDependencies": {
+    "@buzz/cli": "workspace:*"
+  }
+}

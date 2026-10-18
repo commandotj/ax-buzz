@@ -1,0 +1,7 @@
+{
+  "name": "@buzz/cli",
+  "private": true,
+  "scripts": {
+    "build": "go build -o bin/buzz ."
+  }
+}

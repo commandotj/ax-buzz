@@ -1,2 +1,10 @@
 taproom
+buzz
 release/
+apps/cli/bin/*
+!apps/cli/bin/.gitkeep
+apps/desktop/bin/
+node_modules/
+.turbo/
+apps/desktop/frontend/dist/
+.playwright-mcp/

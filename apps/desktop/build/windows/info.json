@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.6.2"
+	},
+	"info": {
+		"0409": {
+			"ProductVersion": "0.6.2",
+			"CompanyName": "Commandotj",
+			"FileDescription": "Mac software discovery and management",
+			"LegalCopyright": "Copyright 2026 Commandotj",
+			"ProductName": "Buzz",
+			"Comments": "Buzz Installer"
+		}
+	}
+}

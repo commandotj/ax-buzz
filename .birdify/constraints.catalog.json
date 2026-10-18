@@ -1,0 +1,26 @@
+{
+  "schema": "birdify.constraint-catalog/v1",
+  "project": {
+    "name": "Buzz",
+    "revision": "a26afac788a5122356bf9c07c3c3d04fabae76d3"
+  },
+  "coverage": {
+    "checkedAt": "2026-10-18T03:23:01.800Z",
+    "snapshot": "committed-HEAD",
+    "shallow": false,
+    "entries": [],
+    "checkedPaths": [],
+    "excluded": [],
+    "unresolved": [],
+    "uninspectedPaths": [],
+    "semanticReview": "pending",
+    "limitations": [
+      "Only tracked entry files and their local Markdown references are collected.",
+      "Uncommitted files, external references, implicit contracts and host/user instructions need separate inspection.",
+      "Sections are source material, not automatically effective or verified rules.",
+      "History counts use current file paths; rename ancestry is not followed."
+    ]
+  },
+  "references": [],
+  "sources": []
+}

@@ -1,0 +1,4 @@
+packages:
+  - apps/cli
+  - apps/desktop
+  - apps/desktop/frontend

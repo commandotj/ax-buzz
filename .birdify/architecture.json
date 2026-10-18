@@ -1,0 +1,465 @@
+{
+  "schemaVersion": 1,
+  "language": "zh",
+  "mapId": "buzz-rfc-review",
+  "revision": 3,
+  "project": {
+    "id": "ax-buzz",
+    "name": "Buzz CLI 与桌面应用"
+  },
+  "constraintDiscovery": {
+    "checkedAt": "2026-10-18T03:25:15Z",
+    "checkedPaths": [
+      "README.md",
+      "apps/cli/main.go",
+      "apps/cli/go.mod",
+      "apps/desktop/main.go",
+      "apps/desktop/cli_service.go",
+      "apps/desktop/go.mod",
+      "apps/desktop/frontend/src/App.tsx",
+      "apps/cli/internal/util/util.go",
+      ".spec/ROADMAP.md",
+      ".spec/rfc/0001-buzz-installer.md",
+      ".spec/rfc/0005-buzz-cli-desktop-shell.md",
+      ".spec/rfc/0006-streaming-homebrew-cli.md",
+      ".spec/rfc/completed/0007-go-function-modules.md",
+      ".spec/rfc/0008-desktop-software-ui.md",
+      "go.work",
+      "modules/brew/go.mod",
+      "modules/brew/brew/data.go",
+      "modules/brew/data/package.go",
+      "modules/gh/go.mod",
+      "modules/gh/gh/gh.go",
+      "modules/protocol/go.mod",
+      "modules/protocol/protocol/protocol.go"
+    ],
+    "uninspectedPaths": [
+      "apps/cli/internal/model",
+      "apps/cli/internal/ui",
+      "apps/desktop/frontend/src/components",
+      ".github",
+      "vendor"
+    ]
+  },
+  "constraints": [
+    {
+      "id": "one-rfc-one-concern",
+      "name": "每个 RFC 只定义一个可实现的关注点",
+      "note": "本次由用户明确要求；将 CLI 流协议、Go 模块化和桌面 UI 分开定义。",
+      "origin": "user",
+      "strength": "required",
+      "applicability": "applicable",
+      "scope": "project",
+      "modules": [],
+      "relationships": [],
+      "evidence": [],
+      "verification": "逐份检查 RFC Summary、Goals、Design 与 Acceptance 是否围绕同一交付物。"
+    },
+    {
+      "id": "apps-and-function-modules",
+      "name": "应用项目放 apps；可复用 Go 功能模块放 modules",
+      "note": "用户明确要求 apps/cli 与 apps/desktop 是完整项目；modules 下每个功能模块有独立 go.mod；根目录无 go.mod，go.work 负责协调。",
+      "origin": "user",
+      "strength": "required",
+      "applicability": "applicable",
+      "scope": "project",
+      "modules": [],
+      "relationships": [],
+      "evidence": [],
+      "verification": "对照 RFC 0007 的目录定义与验收项；不把旧 internal 目录机械映射成模块。"
+    },
+    {
+      "id": "cache-first-manual-refresh",
+      "name": "启动显示缓存数据，并提供显式手动刷新",
+      "note": "用户此前明确要求缓存数据可见和手动重新扫描；刷新状态应保留当前列表位置。",
+      "origin": "user",
+      "strength": "required",
+      "applicability": "applicable",
+      "scope": "project",
+      "modules": [],
+      "relationships": [],
+      "evidence": [],
+      "verification": "检查 RFC 0008 是否规定缓存首次展示、陈旧标记、刷新进度及视图/滚动位置保持。"
+    }
+  ],
+  "modules": [
+    {
+      "id": "cli-app",
+      "role": "backend",
+      "name": "Buzz CLI 应用",
+      "kind": "local",
+      "responsibility": "拥有 buzz 入口、终端界面与 JSONL 写入；依赖 Homebrew 能力和共享协议模块。",
+      "ownership": [
+        {
+          "kind": "directory",
+          "path": "apps/cli"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "apps/cli/main.go",
+          "line": 27,
+          "symbol": "main",
+          "note": "CLI 入口选择机器协议或 Bubble Tea 界面。"
+        },
+        {
+          "path": "apps/cli/go.mod",
+          "line": 1,
+          "note": "CLI 是独立 Go module。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 0,
+        "column": 0
+      }
+    },
+    {
+      "id": "desktop-backend",
+      "role": "backend",
+      "name": "Wails 桌面后端",
+      "kind": "local",
+      "responsibility": "启动匹配版本 CLI 子进程，读取 JSONL 并向前端发布事件；复用共享协议校验。",
+      "ownership": [
+        {
+          "kind": "file",
+          "path": "apps/desktop/cli_service.go"
+        },
+        {
+          "kind": "file",
+          "path": "apps/desktop/main.go"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "apps/desktop/cli_service.go",
+          "line": 70,
+          "symbol": "runHandshake",
+          "note": "启动机器模式子进程并读取事件。"
+        },
+        {
+          "path": "apps/desktop/cli_service.go",
+          "line": 15,
+          "note": "导入共享 protocol 模块。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 0,
+        "column": 1
+      }
+    },
+    {
+      "id": "desktop-ui",
+      "role": "frontend",
+      "name": "Buzz.app React 界面",
+      "kind": "local",
+      "responsibility": "React 前端调用 Wails 后端并呈现 CLI 事件；软件管理界面仍由 RFC 0008 定义。",
+      "ownership": [
+        {
+          "kind": "directory",
+          "path": "apps/desktop/frontend/src"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "apps/desktop/frontend/src/App.tsx",
+          "line": 74,
+          "symbol": "checkConnection",
+          "note": "前端调用 Wails 绑定并订阅 CLI 事件。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 0,
+        "column": 2
+      }
+    },
+    {
+      "id": "brew-module",
+      "role": "backend",
+      "name": "Homebrew 功能模块",
+      "kind": "local",
+      "responsibility": "负责 Homebrew catalog、库存、包操作、共享包记录和加载状态。",
+      "ownership": [
+        {
+          "kind": "directory",
+          "path": "modules/brew"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "modules/brew/brew/data.go",
+          "line": 34,
+          "symbol": "LoadData",
+          "note": "加载 Homebrew catalog 和库存。"
+        },
+        {
+          "path": "modules/brew/data/package.go",
+          "line": 12,
+          "symbol": "Package",
+          "note": "定义共享软件包记录。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 1,
+        "column": 0
+      }
+    },
+    {
+      "id": "gh-module",
+      "role": "backend",
+      "name": "GitHub release 模块",
+      "kind": "local",
+      "responsibility": "通过已安装 gh 命令读取 release 元数据；不依赖应用或 Homebrew 模块。",
+      "ownership": [
+        {
+          "kind": "directory",
+          "path": "modules/gh"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "modules/gh/gh/gh.go",
+          "line": 34,
+          "symbol": "GetGithubReleaseInfo",
+          "note": "按仓库 URL 查找 release 元数据。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 1,
+        "column": 1
+      }
+    },
+    {
+      "id": "protocol-module",
+      "role": "backend",
+      "name": "Buzz JSONL 协议模块",
+      "kind": "local",
+      "responsibility": "编码 CLI progress/result 事件，并由 CLI 与桌面后端共享协议版本和事件校验。",
+      "ownership": [
+        {
+          "kind": "directory",
+          "path": "modules/protocol"
+        }
+      ],
+      "evidence": [
+        {
+          "path": "modules/protocol/protocol/protocol.go",
+          "line": 25,
+          "symbol": "Progress",
+          "note": "编码 progress 与 result。"
+        },
+        {
+          "path": "modules/protocol/protocol/protocol.go",
+          "line": 33,
+          "symbol": "ValidateEvent",
+          "note": "校验版本、事件类型、数据及终止顺序。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 1,
+        "column": 2
+      }
+    },
+    {
+      "id": "rfc-specs",
+      "role": "generic",
+      "name": "Buzz RFC 规范",
+      "kind": "local",
+      "responsibility": "记录产品边界、Go 功能模块结构和桌面 UI 验收。",
+      "ownership": [
+        {
+          "kind": "directory",
+          "path": ".spec/rfc"
+        }
+      ],
+      "evidence": [
+        {
+          "path": ".spec/rfc/completed/0007-go-function-modules.md",
+          "line": 25,
+          "note": "定义应用与功能模块边界。"
+        },
+        {
+          "path": ".spec/rfc/0008-desktop-software-ui.md",
+          "line": 27,
+          "note": "定义桌面 UI 视觉和交互。"
+        }
+      ],
+      "status": "supported",
+      "openQuestions": [],
+      "layout": {
+        "row": 2,
+        "column": 1
+      },
+      "roleAssessment": {
+        "basis": "out-of-taxonomy",
+        "note": "RFC 文档定义设计和验收，不属于运行时、前端或后端代码。"
+      }
+    }
+  ],
+  "relationships": [
+    {
+      "id": "cli-uses-brew",
+      "from": "cli-app",
+      "to": "brew-module",
+      "label": "调用 Homebrew 能力",
+      "kind": "dependency",
+      "visibility": "overview",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": "apps/cli/internal/model/model.go",
+          "line": 6,
+          "note": "CLI model 使用共享 brew 模块。"
+        }
+      ]
+    },
+    {
+      "id": "cli-uses-protocol",
+      "from": "cli-app",
+      "to": "protocol-module",
+      "label": "写出 JSONL 事件",
+      "kind": "dependency",
+      "visibility": "overview",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": "apps/cli/main.go",
+          "line": 9,
+          "note": "CLI 入口使用共享协议写入器。"
+        }
+      ]
+    },
+    {
+      "id": "desktop-uses-protocol",
+      "from": "desktop-backend",
+      "to": "protocol-module",
+      "label": "校验 JSONL 事件",
+      "kind": "dependency",
+      "visibility": "overview",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": "apps/desktop/cli_service.go",
+          "line": 15,
+          "note": "桌面后端复用共享协议校验。"
+        }
+      ]
+    },
+    {
+      "id": "brew-uses-gh",
+      "from": "brew-module",
+      "to": "gh-module",
+      "label": "读取 release 元数据",
+      "kind": "dependency",
+      "visibility": "overview",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": "modules/brew/brew/data.go",
+          "line": 15,
+          "note": "Homebrew 包数据读取 GitHub release 信息。"
+        }
+      ]
+    },
+    {
+      "id": "desktop-calls-cli",
+      "from": "desktop-backend",
+      "to": "cli-app",
+      "label": "启动机器命令",
+      "kind": "request",
+      "visibility": "overview",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": "apps/desktop/cli_service.go",
+          "line": 84,
+          "note": "桌面后端以参数数组启动 Buzz CLI。"
+        }
+      ]
+    },
+    {
+      "id": "ui-calls-backend",
+      "from": "desktop-ui",
+      "to": "desktop-backend",
+      "label": "调用并接收事件",
+      "kind": "event",
+      "visibility": "overview",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": "apps/desktop/frontend/src/App.tsx",
+          "line": 74,
+          "note": "前端调用 Wails 绑定并订阅 CLI 事件。"
+        }
+      ]
+    },
+    {
+      "id": "rfc-defines-app-boundaries",
+      "from": "rfc-specs",
+      "to": "cli-app",
+      "label": "规定应用边界",
+      "kind": "control",
+      "visibility": "detail",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": ".spec/rfc/0005-buzz-cli-desktop-shell.md",
+          "line": 25,
+          "note": "RFC 定义 CLI 与桌面项目职责。"
+        }
+      ]
+    },
+    {
+      "id": "rfc-defines-modules",
+      "from": "rfc-specs",
+      "to": "brew-module",
+      "label": "规定功能模块边界",
+      "kind": "control",
+      "visibility": "detail",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": ".spec/rfc/completed/0007-go-function-modules.md",
+          "line": 31,
+          "note": "RFC 指定 brew、gh、protocol 三个模块。"
+        }
+      ]
+    },
+    {
+      "id": "rfc-defines-ui",
+      "from": "rfc-specs",
+      "to": "desktop-ui",
+      "label": "规定界面验收",
+      "kind": "control",
+      "visibility": "detail",
+      "status": "supported",
+      "openQuestions": [],
+      "evidence": [
+        {
+          "path": ".spec/rfc/0008-desktop-software-ui.md",
+          "line": 27,
+          "note": "RFC 0008 定义 UI 视觉、布局和外观模式。"
+        }
+      ]
+    }
+  ]
+}

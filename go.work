@@ -1,0 +1,15 @@
+go 1.25.6
+
+use (
+	./apps/cli
+	./apps/desktop
+	./modules/brew
+	./modules/gh
+	./modules/protocol
+)
+
+replace github.com/commandotj/ax-buzz/modules/brew v0.0.0 => ./modules/brew
+
+replace github.com/commandotj/ax-buzz/modules/gh v0.0.0 => ./modules/gh
+
+replace github.com/commandotj/ax-buzz/modules/protocol v0.0.0 => ./modules/protocol
