@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   development-source:
-    name: Development source
+    name: Development source (develop)
     if: github.event_name == 'pull_request' && github.base_ref == 'develop'
     runs-on: ubuntu-24.04
     steps:
@@ -31,7 +31,7 @@ jobs:
           fi
 
   promotion-source:
-    name: Promotion source
+    name: Promotion source (main)
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     runs-on: ubuntu-24.04
     steps:
