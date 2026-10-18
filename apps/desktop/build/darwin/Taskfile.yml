@@ -120,6 +120,24 @@ tasks:
     cmds:
       - task: create:app:bundle
 
+  package:dmg:
+    summary: Packages the application into a `.dmg` disk image
+    deps:
+      - task: package
+    cmds:
+      - task: create:dmg
+
+  create:dmg:
+    summary: Creates a `.dmg` containing Buzz.app and an Applications shortcut
+    platforms: [darwin]
+    cmds:
+      - rm -f "{{.BIN_DIR}}/{{.APP_NAME}}.dmg"
+      - >-
+        wails3 tool package --format dmg --name "{{.APP_NAME}}" --out "{{.BIN_DIR}}"
+        --volume-icon "build/darwin/icons.icns"
+        --window-width "540"
+        --window-height "380"
+
   package:universal:
     summary: Packages darwin universal binary (arm64 + amd64)
     deps:

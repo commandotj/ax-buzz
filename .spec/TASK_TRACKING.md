@@ -11,6 +11,13 @@
   - [x] Implement RFC 0007: Buzz Go Function Modules (child of 0001) (RFC 0007)
   - [ ] Implement RFC 0008: Buzz Desktop Software Management UI (child of 0001) (RFC 0008)
   - [ ] Implement RFC 0009: Buzz Desktop Sci-Fi Greek Visual System (child of 0001) (RFC 0009)
+- [ ] Implement RFC 0012: Buzz GitHub CI/CD (Umbrella) (RFC 0012)
+  - [ ] Implement RFC 0013: Buzz pull request and main CI (child of 0012) (RFC 0013)
+  - [x] Implement RFC 0014: Tag-based Buzz CLI GitHub releases (child of 0012) (RFC 0014)
+  - [ ] Implement RFC 0015: Buzz.app DMG GitHub Release (child of 0012) (RFC 0015)
+- [ ] Implement RFC 0016: Buzz feature, develop, and main branch flow (RFC 0016)
+
+
 
 ## Done
 - [x] Implement RFC 0010: Single Buzz Desktop Instance (RFC 0010)

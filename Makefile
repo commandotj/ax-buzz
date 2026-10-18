@@ -1,13 +1,9 @@
 BINARY_NAME = buzz
 LEGACY_BINARY_NAME = taproom
 CLI_DIR = apps/cli
+GO_MODULES = $(CLI_DIR) apps/desktop modules/brew modules/gh modules/protocol
 GOBIN = $(HOME)/.local/bin
-TARGET_OS = darwin
-TARGET_ARCH = arm64 amd64
-VERSION = $(shell cat $(CLI_DIR)/.version)
-ASSETS  = $(wildcard release/*)
-SOURCES = $(shell find $(CLI_DIR) -name '*.go')
-RELEASE_NOTE = .release-note.md
+SOURCES = $(shell find $(GO_MODULES) -name '*.go')
 
 all: build
 
@@ -24,7 +20,6 @@ run: build
 
 clean:
 	rm -f $(BINARY_NAME) $(LEGACY_BINARY_NAME)
-	rm -rf release
 
 install: build
 	mkdir -p $(GOBIN)
@@ -32,33 +27,26 @@ install: build
 	install -m 0755 $(LEGACY_BINARY_NAME) $(GOBIN)/$(LEGACY_BINARY_NAME)
 
 test:
-	go -C $(CLI_DIR) test ./...
+	@for module in $(GO_MODULES); do \
+		echo "Testing $$module"; \
+		go -C $$module test ./... || exit $$?; \
+	done
 
 fmt:
-	gofmt -w $(shell find $(CLI_DIR) -name '*.go')
+	gofmt -w $(SOURCES)
+
+fmt-check:
+	@unformatted="$$(gofmt -l $(SOURCES))"; \
+	if [ -n "$$unformatted" ]; then \
+		echo "Go files need formatting:"; \
+		echo "$$unformatted"; \
+		exit 1; \
+	fi
 
 vet:
-	go -C $(CLI_DIR) vet ./...
-
-release:
-	mkdir -p release
-	for arch in $(TARGET_ARCH); do \
-		echo "Building release/$(BINARY_NAME)-$(TARGET_OS)-$$arch"; \
-		GOOS=$(TARGET_OS) GOARCH=$$arch go -C $(CLI_DIR) build -o ../../release/$(BINARY_NAME)-$(TARGET_OS)-$$arch .; \
-		cp release/$(BINARY_NAME)-$(TARGET_OS)-$$arch release/$(LEGACY_BINARY_NAME)-$(TARGET_OS)-$$arch; \
-		tar -C release -czf release/$(BINARY_NAME)-$(TARGET_OS)-$$arch.tar.gz $(BINARY_NAME)-$(TARGET_OS)-$$arch; \
-		tar -C release -czf release/$(LEGACY_BINARY_NAME)-$(TARGET_OS)-$$arch.tar.gz $(LEGACY_BINARY_NAME)-$(TARGET_OS)-$$arch; \
-		rm release/$(BINARY_NAME)-$(TARGET_OS)-$$arch release/$(LEGACY_BINARY_NAME)-$(TARGET_OS)-$$arch; \
+	@for module in $(GO_MODULES); do \
+		echo "Vetting $$module"; \
+		go -C $$module vet ./... || exit $$?; \
 	done
-	(cd release && shasum -a 256 *.tar.gz > checksum.txt)
 
-gh-release: release
-	git tag $(VERSION)
-	git push origin $(VERSION)
-	$(EDITOR) $(RELEASE_NOTE)
-	gh release create $(VERSION) $(ASSETS) \
-		--title "$(VERSION)" \
-		--notes-file $(RELEASE_NOTE)
-	rm $(RELEASE_NOTE)
-
-.PHONY: all build run clean install fmt vet test release
+.PHONY: all build run clean install fmt fmt-check vet test
