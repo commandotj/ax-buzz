@@ -17,7 +17,7 @@ jobs:
   development-source:
     name: Development source
     if: github.event_name == 'pull_request' && github.base_ref == 'develop'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Require same-repository feature source
         env:
@@ -33,7 +33,7 @@ jobs:
   promotion-source:
     name: Promotion source
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Require same-repository develop source
         env:
