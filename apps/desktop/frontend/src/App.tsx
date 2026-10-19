@@ -141,7 +141,6 @@ function App() {
     estimateSize: () => 62,
     getItemKey: getPackageKey,
     overscan: 12,
-    directDomUpdates: true,
   });
   const virtualRows = virtualizer.getVirtualItems();
   const selected = visiblePackages.find((pkg) => packageKey(pkg) === selectedKey) ?? visiblePackages[0] ?? null;
@@ -208,10 +207,10 @@ function App() {
             {error && <div className="inline-alert" role="alert"><CircleAlert size={16} /><span>{error}</span><Button size="sm" variant="outline" onClick={() => void launch("list")}>Retry</Button></div>}
             {actionNotice && <div className="success-note" role="status"><Check size={15} />{actionNotice}</div>}
             {!busy && !error && visiblePackages.length === 0 ? <div className="empty-state"><Package size={24} /><strong>{packages.length === 0 ? "No catalog data yet" : "No matching packages"}</strong><span>{packages.length === 0 ? "Refresh Homebrew catalog to get started." : "Try another search or section."}</span>{packages.length === 0 && <Button onClick={() => void launch("refresh")}>Load catalog</Button>}</div> : <div ref={listRef} className="package-list" role="list" aria-label="Packages">
-              <div ref={virtualizer.containerRef} className="package-virtual-space">
+              <div className="package-virtual-space" style={{ height: virtualizer.getTotalSize() }}>
                 {virtualRows.map((row) => {
                   const pkg = visiblePackages[row.index];
-                  return <div key={row.key} ref={virtualizer.measureElement} data-index={row.index} className="package-virtual-row" style={{ height: row.size }}>
+                  return <div key={row.key} ref={virtualizer.measureElement} data-index={row.index} className="package-virtual-row" style={{ height: row.size, transform: `translateY(${row.start}px)` }}>
                     <PackageRow pkg={pkg} view={view} index={row.index + 1} selected={selected ? packageKey(selected) === packageKey(pkg) : false} onSelect={() => { setSelectedKey(packageKey(pkg)); setDetailOpen(true); }} onAction={queueAction} disabled={busy} />
                   </div>;
                 })}

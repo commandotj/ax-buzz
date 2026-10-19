@@ -1,6 +1,6 @@
 # macOS release setup
 
-Buzz release workflow publishes notarized macOS DMGs only. CLI ships inside `Buzz.app`; no standalone CLI archive is released. The `macos-release` environment accepts `v*` tags. Apple credentials belong in that environment, never in repository files.
+Buzz release workflow publishes notarized macOS DMGs only. CLI ships inside `Buzz.app`; no standalone CLI archive is released. The `release` environment accepts `v*` tags. Apple credentials belong in that environment, never in repository files.
 
 ## Before you start
 
@@ -20,7 +20,7 @@ You need an active Apple Developer Program team and access to its Apple Develope
 
 ## Add GitHub secrets
 
-Open repository **Settings** → **Environments** → **macos-release** → **Environment secrets**. Add these exact names:
+Open repository **Settings** → **Environments** → **release** → **Environment secrets**. Add these exact names:
 
 | Secret | Value |
 | --- | --- |

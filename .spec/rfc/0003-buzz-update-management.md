@@ -2,7 +2,7 @@
 
 **Status:** Draft
 
-**Parent:** [0001](0001-buzz-installer.md)
+**Parent:** [0001](completed/0001-buzz-installer.md)
 
 ## Summary
 
@@ -22,7 +22,7 @@ Source discovery and tap installation (RFC 0002), installed software inventory a
 
 ## Design
 
-Use Homebrew as version and update authority for Homebrew-managed software. Keep version comparison and update-result data shared between CLI and app. Buzz CLI exposes a read-only version/status command. Wails 3 app owns scheduling, preferences, notifications, and update execution; it must not run updates until enabled by the user. Check and update Buzz app/CLI through their declared Homebrew artifacts. Report unsupported or unmanaged software without claiming it can update it.
+Use Homebrew as the sole version and update authority for formulae and casks. Keep version comparison and update-result data shared between CLI and app. Buzz CLI exposes a read-only version/status command. Wails 3 app owns scheduling, preferences, notifications, and update execution; it must not run package updates until enabled by the user. Check and update Buzz app/CLI through their declared Homebrew artifacts. Formulae or casks without a supported update operation remain visible with that operation unavailable; Buzz does not inventory or manage software from other package managers or standalone app installations.
 
 ## Acceptance
 

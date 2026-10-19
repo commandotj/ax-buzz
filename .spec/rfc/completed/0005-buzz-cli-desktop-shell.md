@@ -1,6 +1,6 @@
 # RFC 0005: Buzz CLI and Desktop Shell Integration (child of 0001)
 
-**Status:** Approved
+**Status:** Implemented
 
 **Parent:** [0001](0001-buzz-installer.md)
 

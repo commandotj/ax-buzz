@@ -28,7 +28,7 @@ Remove manual standalone CLI archive and GitHub release targets from the root `M
 
 Replace the CLI-only release workflow with a tag-triggered desktop release. Build architecture-specific DMGs on matching `macos-15` (`arm64`) and `macos-15-intel` (`amd64`) runners. Validate the embedded `CFBundleShortVersionString` against the tag, verify each DMG and its contents, and publish only the DMGs. Keep release write permission in the publishing job.
 
-Current app packaging uses ad-hoc signing. GitHub repository currently has no release environment or Apple signing/notarization secrets. A public macOS release should require Developer ID signing and notarization; until credentials are configured, the workflow may build and validate DMGs but must not publish them as a downloadable release. Add a protected `macos-release` environment, map required secrets into Wails signing and Apple notarization setup, validate the Developer ID identity and notary credentials, sign and notarize the app, create and staple the DMG, then publish it. Fail closed when credentials or verification are missing.
+Local app packaging uses ad-hoc signing. The tag release workflow uses the protected `release` environment for Apple signing and notarization secrets. A public macOS release requires Developer ID signing and notarization. Map required secrets into Wails signing and Apple notarization setup, validate the Developer ID identity and notary credentials, sign and notarize the app, create and staple the DMG, then publish it. Fail closed when credentials or verification are missing.
 
 ## Acceptance
 

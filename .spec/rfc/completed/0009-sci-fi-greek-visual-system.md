@@ -1,6 +1,6 @@
 # RFC 0009: Buzz Desktop Ancient Greek Luxury Visual System (child of 0001)
 
-**Status:** Approved
+**Status:** Implemented
 
 **Parent:** [0001](0001-buzz-installer.md)
 
