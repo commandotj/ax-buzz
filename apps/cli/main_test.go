@@ -140,7 +140,7 @@ func TestMainErrorAndRunRoutes(t *testing.T) {
 		t.Fatal("stream error dispatch missing")
 	}
 	*flagShowVersion = true
-	if err := run([]string{"--version"}, &output, &diagnostics); err != nil || !strings.Contains(output.String(), strings.TrimSpace(version)) {
+	if err := run([]string{"--version"}, &output, &diagnostics); err != nil || !strings.Contains(output.String(), strings.Fields(version)[0]) {
 		t.Fatal("version route failed")
 	}
 	*flagShowVersion = false

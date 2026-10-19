@@ -1,0 +1,50 @@
+name: Open feature integration PR
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: ['feature/**']
+
+permissions:
+  actions: read
+  pull-requests: write
+
+concurrency:
+  group: auto-feature-pr-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    name: Open feature to develop PR
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      startsWith(github.event.workflow_run.head_branch, 'feature/')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require PR token
+        env:
+          FEATURE_PR_TOKEN: ${{ secrets.FEATURE_PR_TOKEN }}
+        run: |
+          if [[ -z "$FEATURE_PR_TOKEN" ]]; then
+            echo "::error::Configure repository secret FEATURE_PR_TOKEN with Pull requests: write on this repository."
+            exit 1
+          fi
+
+      - name: Create or reuse feature PR
+        env:
+          GH_TOKEN: ${{ secrets.FEATURE_PR_TOKEN }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          existing_pr="$(gh pr list --repo "$REPOSITORY" --head "$HEAD_BRANCH" --base develop --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "$existing_pr" ]]; then
+            echo "Reusing existing PR #$existing_pr from $HEAD_BRANCH to develop."
+            echo "Reused PR: #$existing_pr" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          body="Automated integration PR for $HEAD_BRANCH. Its latest push passed the full CI Verify job. Review and merge remain manual."
+          gh pr create --repo "$REPOSITORY" --head "$HEAD_BRANCH" --base develop \
+            --title "feat: integrate $HEAD_BRANCH" --body "$body"

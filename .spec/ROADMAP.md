@@ -19,3 +19,7 @@
 | 0015 | [Buzz.app DMG GitHub Release (child of 0012)](rfc/0015-buzz-app-dmg-release.md) | Approved |
 | 0016 | [Buzz feature, develop, and main branch flow](rfc/0016-branch-promotion-flow.md) | Approved |
 | 0017 | [Remove unsupported Wails iOS target](rfc/completed/0017-remove-unused-ios-target.md) | Implemented |
+| 0018 | [Automatically open feature to develop PR](rfc/0018-automatic-develop-promotion-pull-request.md) | Approved |
+| 0019 | [Release Please version pull request automation](rfc/0019-release-please-version-pr.md) | Approved |
+| 0020 | [Automated Buzz.app Homebrew Cask pull request](rfc/0020-homebrew-cask-release-pr.md) | Approved |
+| 0021 | [Automatically open promotion PR after release version merge](rfc/0021-automatic-develop-main-promotion-pr.md) | Approved |

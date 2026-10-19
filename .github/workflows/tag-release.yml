@@ -1,0 +1,74 @@
+name: Tag verified Buzz release
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tag-buzz-release-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  tag-release:
+    name: Tag synchronized main version
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out exact verified main commit and tag history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+
+      - name: Require release token
+        env:
+          RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+        run: |
+          if [[ -z "$RELEASE_BOT_TOKEN" ]]; then
+            echo "::error::Configure RELEASE_BOT_TOKEN with Contents: write on this repository."
+            exit 1
+          fi
+
+      - name: Create immutable version tag
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+          CI_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! git merge-base --is-ancestor "$CI_SHA" origin/main; then
+            echo "::error::Verified CI commit is not reachable from main."
+            exit 1
+          fi
+          VERSION="$(node tools/version.mjs read "$CI_SHA")"
+          RELEASE_TAG="v$VERSION"
+          if git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            TAG_SHA="$(git rev-list -n 1 "$RELEASE_TAG")"
+            if [[ "$TAG_SHA" != "$CI_SHA" ]]; then
+              echo "Version $RELEASE_TAG already points to $TAG_SHA; refusing to move it to $CI_SHA."
+            else
+              echo "$RELEASE_TAG already points to the verified main commit."
+            fi
+            echo "Existing immutable tag: $RELEASE_TAG ($TAG_SHA)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          LATEST_TAG="$(git tag --list 'v[0-9]*' --sort=-version:refname | head -n 1)"
+          if [[ -n "$LATEST_TAG" ]] && ! node tools/version.mjs compare "$LATEST_TAG" >/dev/null; then
+            echo "No unreleased version: main version $VERSION is not newer than $LATEST_TAG."
+            echo "No new version tag required; latest is $LATEST_TAG." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          gh auth setup-git --hostname github.com
+          git tag -a "$RELEASE_TAG" "$CI_SHA" -m "Release $RELEASE_TAG"
+          git push origin "refs/tags/$RELEASE_TAG"
+          echo "Created $RELEASE_TAG at verified main commit $CI_SHA." >> "$GITHUB_STEP_SUMMARY"

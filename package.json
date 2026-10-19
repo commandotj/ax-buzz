@@ -6,6 +6,7 @@
     "dev": "turbo run dev --filter=@buzz/desktop",
     "build": "turbo run build --filter=@buzz/desktop",
     "build:cli": "pnpm --filter @buzz/cli build",
+    "check:version": "node tools/version.mjs check",
     "setup:wails": "go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.30"
   },
   "devDependencies": {
