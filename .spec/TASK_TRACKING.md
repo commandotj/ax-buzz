@@ -17,8 +17,7 @@
   - [ ] Implement RFC 0015: Buzz.app DMG GitHub Release (child of 0012) (RFC 0015)
 - [ ] Implement RFC 0016: Buzz feature, develop, and main branch flow (RFC 0016)
 
-
-
 ## Done
 - [x] Implement RFC 0010: Single Buzz Desktop Instance (RFC 0010)
 - [x] Implement RFC 0011: Use the Buzz app icon in the app shell (RFC 0011)
+- [x] Implement RFC 0017: Remove unsupported Wails iOS target (RFC 0017)
