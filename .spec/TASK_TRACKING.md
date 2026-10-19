@@ -16,6 +16,14 @@
   - [x] Implement RFC 0014: Tag-based Buzz CLI GitHub releases (child of 0012) (RFC 0014)
   - [ ] Implement RFC 0015: Buzz.app DMG GitHub Release (child of 0012) (RFC 0015)
 - [ ] Implement RFC 0016: Buzz feature, develop, and main branch flow (RFC 0016)
+- [ ] Implement RFC 0018: Automatically open feature to develop PR (RFC 0018)
+- [ ] Implement RFC 0019: Release Please version pull request automation (RFC 0019)
+- [ ] Implement RFC 0020: Automated Buzz.app Homebrew Cask pull request (RFC 0020)
+- [ ] Implement RFC 0021: Automatically open promotion PR after release version merge (RFC 0021)
+
+
+
+
 
 ## Done
 - [x] Implement RFC 0010: Single Buzz Desktop Instance (RFC 0010)

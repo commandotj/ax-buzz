@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [develop, main]
   push:
-    branches: [develop, main]
+    branches: [develop, main, 'feature/**']
 
 permissions:
   contents: read
@@ -25,10 +25,33 @@ jobs:
           HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
           BASE_REPOSITORY: ${{ github.repository }}
         run: |
-          if [[ "$HEAD_REF" != feature/* || "$HEAD_REPOSITORY" != "$BASE_REPOSITORY" ]]; then
-            echo "Development pull requests must come from a feature/* branch in this repository."
+          if [[ ("$HEAD_REF" != feature/* && "$HEAD_REF" != "release-please--branches--develop") || "$HEAD_REPOSITORY" != "$BASE_REPOSITORY" ]]; then
+            echo "Development pull requests must come from a same-repository feature/* or Release Please branch."
             exit 1
           fi
+
+      - name: Check out same-repository pull request head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+
+      - name: Restrict Release Please PR to synchronized release metadata
+        if: github.event.pull_request.head.ref == 'release-please--branches--develop'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          allowed=$'CHANGELOG.md\n.release-please-manifest.json\napps/cli/.version\napps/desktop/build/config.yml\napps/desktop/build/darwin/Info.plist'
+          while IFS= read -r path; do
+            [[ -z "$path" ]] && continue
+            if ! grep -Fxq "$path" <<< "$allowed"; then
+              echo "::error::Release Please PR changed forbidden path: $path"
+              exit 1
+            fi
+          done < <(git diff --name-only "$BASE_SHA...$HEAD_SHA")
+          node tools/version.mjs compare "$BASE_SHA"
 
   promotion-source:
     name: Promotion source (main)
@@ -85,6 +108,12 @@ jobs:
 
       - name: Build embedded desktop frontend
         run: pnpm --filter @buzz/desktop-frontend build
+
+      - name: Test release tooling
+        run: node --test tools/*.test.mjs
+
+      - name: Check synchronized app versions
+        run: pnpm check:version
 
       - name: Test Go workspace
         run: make test

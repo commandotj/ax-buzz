@@ -69,7 +69,7 @@ func run(args []string, output, diagnostics io.Writer) error {
 	}
 
 	if *flagShowVersion {
-		_, err := fmt.Fprint(output, version)
+		_, err := fmt.Fprint(output, strings.Fields(version)[0])
 		return err
 	}
 
@@ -108,7 +108,7 @@ func runMachine(output io.Writer, args []string) error {
 	}
 	return writer.Result(map[string]string{
 		"product": "Buzz CLI",
-		"version": strings.TrimSpace(version),
+		"version": strings.Fields(version)[0],
 	})
 }
 

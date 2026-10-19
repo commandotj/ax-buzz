@@ -1,0 +1,49 @@
+name: Release Please
+
+on:
+  push:
+    branches: [develop]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-please-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version-pr:
+    name: Create or update version PR
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require workflow-enabled token
+        env:
+          RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+        run: |
+          if [[ -z "$RELEASE_BOT_TOKEN" ]]; then
+            echo "::error::Configure repository secret RELEASE_BOT_TOKEN with Contents, Issues, and Pull requests write access."
+            exit 1
+          fi
+
+      - name: Run Release Please version PR mode
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          token: ${{ secrets.RELEASE_BOT_TOKEN }}
+          target-branch: develop
+          skip-github-release: true
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Report Release Please result
+        env:
+          PRS_CREATED: ${{ steps.release.outputs.prs_created }}
+          PRS: ${{ steps.release.outputs.prs }}
+        run: |
+          if [[ "$PRS_CREATED" == "true" ]]; then
+            printf 'Release Please opened or updated version PRs:\n\n```json\n%s\n```\n' "$PRS" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf 'Release Please found no eligible Conventional Commit release changes.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi

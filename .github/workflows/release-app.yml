@@ -3,6 +3,7 @@ name: Buzz.app release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,12 +26,18 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
           if [[ ! "$RELEASE_TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
             echo "Release tag must use vMAJOR.MINOR.PATCH."
             exit 1
           fi
           if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
             echo "Release tag must point to a commit reachable from main."
+            exit 1
+          fi
+          VERSION="$(node tools/version.mjs read "$GITHUB_SHA")"
+          if [[ "$RELEASE_TAG" != "v$VERSION" ]]; then
+            echo "::error::Release tag $RELEASE_TAG does not match synchronized source version $VERSION."
             exit 1
           fi
 
@@ -86,6 +93,9 @@ jobs:
 
       - name: Install JavaScript dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Check synchronized source versions
+        run: pnpm check:version
 
       - name: Install Wails CLI
         run: pnpm setup:wails
@@ -251,22 +261,167 @@ jobs:
           path: release-assets
           merge-multiple: true
 
-      - name: Publish DMGs only
+      - name: Create or recover draft release and publish DMGs
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
           ARM64_DMG="release-assets/Buzz-${RELEASE_TAG}-macos-arm64.dmg"
           AMD64_DMG="release-assets/Buzz-${RELEASE_TAG}-macos-amd64.dmg"
           test -f "$ARM64_DMG"
           test -f "$AMD64_DMG"
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "Buzz ${RELEASE_TAG}" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" "$ARM64_DMG" "$AMD64_DMG" --clobber
           sha_arm64="$(sha256sum "$ARM64_DMG" | awk '{print $1}')"
           sha_amd64="$(sha256sum "$AMD64_DMG" | awk '{print $1}')"
-          notes="$(printf 'SHA-256 checksums:\n- Buzz-%s-macos-arm64.dmg: %s\n- Buzz-%s-macos-amd64.dmg: %s\n' "$RELEASE_TAG" "$sha_arm64" "$RELEASE_TAG" "$sha_amd64")"
-          gh release create "$RELEASE_TAG" \
-            "$ARM64_DMG" \
-            "$AMD64_DMG" \
-            --verify-tag \
-            --title "Buzz ${RELEASE_TAG}" \
-            --generate-notes \
-            --notes "$notes"
+          gh release view "$RELEASE_TAG" --json body --jq '.body' > "$RUNNER_TEMP/release-notes-base.md"
+          sed '/^SHA-256 checksums:/,$d' "$RUNNER_TEMP/release-notes-base.md" > "$RUNNER_TEMP/release-notes.md"
+          printf '\nSHA-256 checksums:\n- Buzz-%s-macos-arm64.dmg: %s\n- Buzz-%s-macos-amd64.dmg: %s\n' \
+            "$RELEASE_TAG" "$sha_arm64" "$RELEASE_TAG" "$sha_amd64" >> "$RUNNER_TEMP/release-notes.md"
+          gh release edit "$RELEASE_TAG" --draft=false --title "Buzz ${RELEASE_TAG}" --notes-file "$RUNNER_TEMP/release-notes.md"
+
+  verify-release:
+    name: Verify public release assets
+    needs: [publish-release]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      verified: ${{ steps.verify.outputs.verified }}
+    steps:
+      - name: Verify DMG-only release contents
+        id: verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          gh release view "$RELEASE_TAG" --json tagName,isDraft,assets | jq -e --arg tag "$RELEASE_TAG" '
+            .tagName == $tag and .isDraft == false and
+            ([.assets[].name] | sort) == ["Buzz-\($tag)-macos-amd64.dmg", "Buzz-\($tag)-macos-arm64.dmg"]
+          ' >/dev/null
+          echo "verified=true" >> "$GITHUB_OUTPUT"
+          echo "Verified public DMG assets for $RELEASE_TAG." >> "$GITHUB_STEP_SUMMARY"
+
+  update-homebrew-cask:
+    name: Open Homebrew Cask PR
+    needs: [verify-release]
+    if: needs.verify-release.outputs.verified == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Require tap token
+        env:
+          HOMEBREW_CASK_TOKEN: ${{ secrets.HOMEBREW_CASK_TOKEN }}
+        run: |
+          if [[ -z "$HOMEBREW_CASK_TOKEN" ]]; then
+            echo "::error::Configure HOMEBREW_CASK_TOKEN with Contents and Pull requests write access to systembugtj/luban-homebrew."
+            exit 1
+          fi
+
+      - name: Check out Buzz release tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download public DMGs and verify release checksums
+        id: checksums
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_CASK_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/buzz-assets"
+          release_body="$(curl --fail --location --silent --show-error \
+            "https://api.github.com/repos/commandotj/ax-buzz/releases/tags/${RELEASE_TAG}" \
+            -H 'Accept: application/vnd.github+json' | jq -r '.body')"
+          for arch in arm64 amd64; do
+            name="Buzz-${RELEASE_TAG}-macos-${arch}.dmg"
+            curl --fail --location --silent --show-error \
+              "https://github.com/commandotj/ax-buzz/releases/download/${RELEASE_TAG}/${name}" \
+              --output "$RUNNER_TEMP/buzz-assets/$name"
+            expected_sha="$(printf '%s\n' "$release_body" | sed -n "s/^- ${name}: //p")"
+            actual_sha="$(sha256sum "$RUNNER_TEMP/buzz-assets/$name" | awk '{print $1}')"
+            if [[ ! "$expected_sha" =~ ^[a-f0-9]{64}$ || "$actual_sha" != "$expected_sha" ]]; then
+              echo "::error::Published $name checksum does not match release notes."
+              exit 1
+            fi
+            printf '%s=%s\n' "$arch" "$actual_sha" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Open or update tap Cask PR
+        env:
+          GH_TOKEN: ${{ secrets.HOMEBREW_CASK_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ github.ref_name }}
+          ARM_SHA: ${{ steps.checksums.outputs.arm64 }}
+          INTEL_SHA: ${{ steps.checksums.outputs.amd64 }}
+          TAP_REPOSITORY: systembugtj/luban-homebrew
+        run: |
+          set -euo pipefail
+          RELEASE_VERSION="${RELEASE_VERSION#v}"
+          gh auth setup-git --hostname github.com
+          TAP_DIR="$RUNNER_TEMP/luban-homebrew"
+          gh repo clone "$TAP_REPOSITORY" "$TAP_DIR" -- --depth 1 --branch develop
+          cd "$TAP_DIR"
+          mkdir -p Casks
+          node "$GITHUB_WORKSPACE/tools/render-buzz-cask.mjs" "$RELEASE_VERSION" "$ARM_SHA" "$INTEL_SHA" "$RUNNER_TEMP/buzz.rb"
+          if cmp -s "$RUNNER_TEMP/buzz.rb" Casks/buzz.rb; then
+            echo "Buzz Cask already matches $RELEASE_TAG on tap develop." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          branch="release/buzz-${RELEASE_TAG}"
+          if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null 2>&1; then
+            git fetch origin "refs/heads/$branch:refs/remotes/origin/$branch"
+            git checkout -B "$branch" "origin/$branch"
+          else
+            git checkout -b "$branch"
+          fi
+          node "$GITHUB_WORKSPACE/tools/render-buzz-cask.mjs" "$RELEASE_VERSION" "$ARM_SHA" "$INTEL_SHA" Casks/buzz.rb
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if ! git diff --quiet; then
+            git add Casks/buzz.rb
+            git commit -m "chore(cask): update Buzz ${RELEASE_TAG}"
+            git push --set-upstream origin "$branch"
+          fi
+          existing_pr="$(gh pr list --repo "$TAP_REPOSITORY" --head "systembugtj:$branch" --base develop --state open --json number --jq '.[0].number // empty')"
+          body="Update Buzz.app Cask to ${RELEASE_TAG}. Both architecture-specific DMGs were downloaded from the published signed release and their SHA-256 checksums match its release notes."
+          printf '%s\n' "$body" > "$RUNNER_TEMP/cask-pr-body.md"
+          if [[ -n "$existing_pr" ]]; then
+            gh pr edit "$existing_pr" --repo "$TAP_REPOSITORY" --title "chore(cask): update Buzz ${RELEASE_TAG}" --body-file "$RUNNER_TEMP/cask-pr-body.md"
+            echo "Updated Homebrew Cask PR #$existing_pr." >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr create --repo "$TAP_REPOSITORY" --head "systembugtj:$branch" --base develop \
+              --title "chore(cask): update Buzz ${RELEASE_TAG}" --body-file "$RUNNER_TEMP/cask-pr-body.md"
+          fi
+
+  retag-release-pr:
+    name: Mark version PR released
+    needs: [verify-release]
+    if: needs.verify-release.outputs.verified == 'true'
+    runs-on: ubuntu-24.04
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Mark merged Release Please PRs as tagged
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if ! gh label view "autorelease: tagged" --repo "$REPOSITORY" >/dev/null 2>&1; then
+            gh label create "autorelease: tagged" --repo "$REPOSITORY" --color EDEDED
+          fi
+          gh pr list --repo "$REPOSITORY" --base develop --state merged \
+            --label "autorelease: pending" --json number --jq '.[].number' > "$RUNNER_TEMP/release-prs.txt"
+          while IFS= read -r number; do
+            [[ -z "$number" ]] && continue
+            gh pr edit "$number" --repo "$REPOSITORY" \
+              --remove-label "autorelease: pending" --add-label "autorelease: tagged"
+          done < "$RUNNER_TEMP/release-prs.txt"
+          echo "Release version PR labels reconciled after asset verification." >> "$GITHUB_STEP_SUMMARY"

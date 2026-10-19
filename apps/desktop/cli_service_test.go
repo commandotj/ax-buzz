@@ -6,6 +6,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -190,15 +191,19 @@ func TestCLIServiceRunCLIFailures(t *testing.T) {
 	})
 	t.Run("cancel", func(t *testing.T) {
 		marker := filepath.Join(t.TempDir(), "ready")
-		cli := writeRawCLI(t, `touch "$BUZZ_TEST_READY"; exec sleep 5`)
+		cli, err := os.Executable()
+		if err != nil {
+			t.Fatal(err)
+		}
 		t.Setenv("BUZZ_CLI_PATH", cli)
 		t.Setenv("BUZZ_TEST_READY", marker)
+		t.Setenv("BUZZ_TEST_CANCEL_CHILD", "1")
 		ctx, cancel := context.WithCancel(context.Background())
 		var events []cliEvent
 		done := make(chan struct{})
 		go func() {
 			defer close(done)
-			(&CLIService{emitEvent: func(event cliEvent) { events = append(events, event) }}).runCLI(ctx, nil)
+			(&CLIService{emitEvent: func(event cliEvent) { events = append(events, event) }}).runCLI(ctx, []string{"-test.run=^TestCLIServiceCancelChild$"})
 		}()
 		deadline := time.Now().Add(3 * time.Second)
 		for {
@@ -222,15 +227,20 @@ func TestCLIServiceRunCLIFailures(t *testing.T) {
 	})
 	t.Run("cancel after result", func(t *testing.T) {
 		marker := filepath.Join(t.TempDir(), "ready")
-		cli := writeRawCLI(t, `printf '{"protocolVersion":1,"event":"result","data":{}}\n'; touch "$BUZZ_TEST_READY"; exec sleep 5`)
+		cli, err := os.Executable()
+		if err != nil {
+			t.Fatal(err)
+		}
 		t.Setenv("BUZZ_CLI_PATH", cli)
 		t.Setenv("BUZZ_TEST_READY", marker)
+		t.Setenv("BUZZ_TEST_CANCEL_CHILD", "1")
+		t.Setenv("BUZZ_TEST_CANCEL_CHILD_RESULT", "1")
 		ctx, cancel := context.WithCancel(context.Background())
 		var events []cliEvent
 		done := make(chan struct{})
 		go func() {
 			defer close(done)
-			(&CLIService{emitEvent: func(event cliEvent) { events = append(events, event) }}).runCLI(ctx, nil)
+			(&CLIService{emitEvent: func(event cliEvent) { events = append(events, event) }}).runCLI(ctx, []string{"-test.run=^TestCLIServiceCancelChild$"})
 		}()
 		deadline := time.Now().Add(3 * time.Second)
 		for {
@@ -265,6 +275,22 @@ func TestCLIServiceRunCLIFailures(t *testing.T) {
 			t.Fatalf("events = %#v", events)
 		}
 	})
+}
+
+func TestCLIServiceCancelChild(t *testing.T) {
+	if os.Getenv("BUZZ_TEST_CANCEL_CHILD") != "1" {
+		return
+	}
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	defer signal.Stop(signals)
+	if os.Getenv("BUZZ_TEST_CANCEL_CHILD_RESULT") == "1" {
+		_, _ = os.Stdout.Write([]byte("{\"protocolVersion\":1,\"event\":\"result\",\"data\":{}}\n"))
+	}
+	if err := os.WriteFile(os.Getenv("BUZZ_TEST_READY"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	<-signals
 }
 
 func TestLargeLineChild(t *testing.T) {
