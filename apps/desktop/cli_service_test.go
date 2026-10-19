@@ -189,8 +189,10 @@ func TestCLIServiceRunCLIFailures(t *testing.T) {
 		}
 	})
 	t.Run("cancel", func(t *testing.T) {
-		cli := writeCLI(t, "sleep 5\n", "", false)
+		marker := filepath.Join(t.TempDir(), "ready")
+		cli := writeRawCLI(t, `touch "$BUZZ_TEST_READY"; exec sleep 5`)
 		t.Setenv("BUZZ_CLI_PATH", cli)
+		t.Setenv("BUZZ_TEST_READY", marker)
 		ctx, cancel := context.WithCancel(context.Background())
 		var events []cliEvent
 		done := make(chan struct{})
@@ -198,7 +200,16 @@ func TestCLIServiceRunCLIFailures(t *testing.T) {
 			defer close(done)
 			(&CLIService{emitEvent: func(event cliEvent) { events = append(events, event) }}).runCLI(ctx, nil)
 		}()
-		time.Sleep(50 * time.Millisecond)
+		deadline := time.Now().Add(3 * time.Second)
+		for {
+			if _, err := os.Stat(marker); err == nil {
+				break
+			}
+			if time.Now().After(deadline) {
+				t.Fatal("CLI did not start")
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 		cancel()
 		select {
 		case <-done:
