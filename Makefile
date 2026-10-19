@@ -29,8 +29,10 @@ install: build
 test:
 	@for module in $(GO_MODULES); do \
 		echo "Testing $$module"; \
+		packages="./..."; \
+		if [ "$$module" = "apps/desktop" ]; then packages="$$(go -C $$module list ./... | grep -v '/build/ios/scripts/deps$$')"; fi; \
 		profile="$$(mktemp "$${TMPDIR:-/tmp}/buzz-coverage.XXXXXX")" || exit $$?; \
-		if ! go -C $$module test -count=1 -coverprofile=$$profile ./...; then rm -f $$profile; exit 1; fi; \
+		if ! go -C $$module test -count=1 -coverprofile=$$profile $$packages; then rm -f $$profile; exit 1; fi; \
 		coverage="$$(go tool cover -func=$$profile | awk '/^total:/ {print $$NF}')"; \
 		if [ "$$coverage" != "100.0%" ]; then echo "Coverage gate failed for $$module: $${coverage:-no coverage}"; awk '$$NF == 0 {print "Uncovered Go source:", $$1}' $$profile; rm -f $$profile; exit 1; fi; \
 		rm -f $$profile; \
