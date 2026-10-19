@@ -29,7 +29,12 @@ install: build
 test:
 	@for module in $(GO_MODULES); do \
 		echo "Testing $$module"; \
-		go -C $$module test ./... || exit $$?; \
+		profile="$$(mktemp "$${TMPDIR:-/tmp}/buzz-coverage.XXXXXX")" || exit $$?; \
+		if ! go -C $$module test -count=1 -coverprofile=$$profile ./...; then rm -f $$profile; exit 1; fi; \
+		coverage="$$(go tool cover -func=$$profile | awk '/^total:/ {print $$NF}')"; \
+		rm -f $$profile; \
+		if [ "$$coverage" != "100.0%" ]; then echo "Coverage gate failed for $$module: $${coverage:-no coverage}"; exit 1; fi; \
+		echo "Coverage gate passed for $$module: $$coverage"; \
 	done
 
 fmt:

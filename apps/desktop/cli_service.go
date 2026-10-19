@@ -24,10 +24,15 @@ type cliEvent struct {
 }
 
 type CLIService struct {
-	app    *application.App
-	mu     sync.Mutex
-	cancel context.CancelFunc
+	app       *application.App
+	emitEvent func(cliEvent)
+	mu        sync.Mutex
+	cancel    context.CancelFunc
 }
+
+var executablePath = os.Executable
+var newCLICommand = exec.CommandContext
+var emitWailsEvent = (*application.EventManager).Emit
 
 func NewCLIService() *CLIService {
 	return &CLIService{}
@@ -98,13 +103,8 @@ func (s *CLIService) runCLI(ctx context.Context, args []string) {
 		s.emitError(err.Error())
 		return
 	}
-	cmd := exec.CommandContext(ctx, cliPath, args...)
-	cmd.Cancel = func() error {
-		if cmd.Process == nil {
-			return nil
-		}
-		return cmd.Process.Signal(os.Interrupt)
-	}
+	cmd := newCLICommand(ctx, cliPath, args...)
+	cmd.Cancel = func() error { return interruptCLIProcess(cmd) }
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		s.emitError(fmt.Sprintf("start Buzz CLI output: %v", err))
@@ -178,12 +178,23 @@ func (s *CLIService) runCLI(ctx context.Context, args []string) {
 }
 
 func resolveCLIPath() (string, error) {
-	if override := os.Getenv("BUZZ_CLI_PATH"); override != "" {
-		return filepath.Abs(override)
-	}
-	executable, err := os.Executable()
+	executable, err := executablePath()
 	if err != nil {
 		return "", fmt.Errorf("locate Buzz.app executable: %w", err)
+	}
+	return findCLIPath(os.Getenv("BUZZ_CLI_PATH"), executable)
+}
+
+func interruptCLIProcess(cmd *exec.Cmd) error {
+	if cmd.Process == nil {
+		return nil
+	}
+	return cmd.Process.Signal(os.Interrupt)
+}
+
+func findCLIPath(override, executable string) (string, error) {
+	if override != "" {
+		return filepath.Abs(override)
 	}
 	executableDir := filepath.Dir(executable)
 	candidates := []string{
@@ -199,8 +210,12 @@ func resolveCLIPath() (string, error) {
 }
 
 func (s *CLIService) emit(event cliEvent) {
+	if s.emitEvent != nil {
+		s.emitEvent(event)
+		return
+	}
 	if s.app != nil {
-		s.app.Event.Emit("buzz:cli-event", event)
+		emitWailsEvent(s.app.Event, "buzz:cli-event", event)
 	}
 }
 

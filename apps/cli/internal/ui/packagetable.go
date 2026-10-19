@@ -41,7 +41,8 @@ var MaxTableWidth = func() int {
 }()
 
 var (
-	tableStyle = baseStyle.BorderForeground(focusedBorderColor)
+	tableStyle             = baseStyle.BorderForeground(focusedBorderColor)
+	exitInvalidTableConfig = os.Exit
 )
 
 type TableSelectionChangedMsg struct {
@@ -66,45 +67,17 @@ type PackageTableModel struct {
 }
 
 func NewPackageTableModel() PackageTableModel {
+	columns, sortCol, err := parseTableConfig(*flagHideCols, *flagSortColumn)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		exitInvalidTableConfig(1)
+		return PackageTableModel{}
+	}
 	// Main table
 	tbl := table.New(
 		table.WithFocused(true),
 		table.WithStyles(getTableStyles()),
 	)
-
-	// Parse hidden columns from command line flag into a set
-	hiddenColumns := make(map[packageTableColumn]bool)
-	for _, c := range *flagHideCols {
-		if col, err := parseColumnName(c); err == nil {
-			if col.hideable() {
-				hiddenColumns[col] = true
-			} else {
-				fmt.Fprintf(os.Stderr, "Column %s can not be hidden\n", col.String())
-				os.Exit(1)
-			}
-		} else {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-	}
-
-	// Add all non-hidden columns
-	columns := []packageTableColumn{}
-	for i := range int(totalNumColumns) {
-		col := packageTableColumn(i)
-		if _, hidden := hiddenColumns[col]; !hidden {
-			columns = append(columns, col)
-		}
-	}
-
-	sortCol, err := parseColumnName(*flagSortColumn)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	} else if !sortCol.sortable() {
-		fmt.Fprintf(os.Stderr, "Can not sort by column: %s\n", sortCol.String())
-		os.Exit(1)
-	}
 
 	return PackageTableModel{
 		table:      tbl,
@@ -113,6 +86,35 @@ func NewPackageTableModel() PackageTableModel {
 		sortNext:   key.NewBinding(key.WithKeys("s")),
 		sortPrev:   key.NewBinding(key.WithKeys("S")),
 	}
+}
+
+func parseTableConfig(hiddenNames []string, sortName string) ([]packageTableColumn, packageTableColumn, error) {
+	hiddenColumns := make(map[packageTableColumn]bool)
+	for _, name := range hiddenNames {
+		column, err := parseColumnName(name)
+		if err != nil {
+			return nil, colUnknown, err
+		}
+		if !column.hideable() {
+			return nil, colUnknown, fmt.Errorf("Column %s can not be hidden", column.String())
+		}
+		hiddenColumns[column] = true
+	}
+	columns := []packageTableColumn{}
+	for i := range int(totalNumColumns) {
+		column := packageTableColumn(i)
+		if !hiddenColumns[column] {
+			columns = append(columns, column)
+		}
+	}
+	sortColumn, err := parseColumnName(sortName)
+	if err != nil {
+		return nil, colUnknown, err
+	}
+	if !sortColumn.sortable() {
+		return nil, colUnknown, fmt.Errorf("Can not sort by column: %s", sortColumn.String())
+	}
+	return columns, sortColumn, nil
 }
 
 func getTableStyles() table.Styles {
@@ -337,9 +339,4 @@ func (m *PackageTableModel) UpdateRows() {
 		rows[i] = table.Row(rowData)
 	}
 	m.table.SetRows(rows)
-
-	// Reset cursor if it's out of bounds
-	if m.table.Cursor() >= len(rows) {
-		m.table.SetCursor(0)
-	}
 }

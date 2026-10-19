@@ -11,9 +11,31 @@ import (
 var assets embed.FS
 
 func main() {
+	if err := runDesktop(createDesktopApp, startWailsApp); err != nil {
+		fatalError(err)
+	}
+}
+
+var fatalError = log.Fatal
+var createDesktopApp = newBuzzApp
+var startWailsApp = runWailsApp
+var newWailsApplication = application.New
+var createWailsWindow = (*application.WindowManager).NewWithOptions
+var restoreWailsWindow = (*application.WebviewWindow).Restore
+var showWailsWindow = (*application.WebviewWindow).Show
+var focusWailsWindow = (*application.WebviewWindow).Focus
+var invokeWailsRun = (*application.App).Run
+
+func runDesktop(create func() (*application.App, *CLIService), run func(*application.App) error) error {
+	app, cliService := create()
+	cliService.SetApp(app)
+	return run(app)
+}
+
+func newBuzzApp() (*application.App, *CLIService) {
 	cliService := NewCLIService()
 	var mainWindow *application.WebviewWindow
-	app := application.New(application.Options{
+	app := newWailsApplication(application.Options{
 		Name:        "Buzz",
 		Description: "Mac software discovery and management",
 		SingleInstance: &application.SingleInstanceOptions{
@@ -22,9 +44,9 @@ func main() {
 				if mainWindow == nil {
 					return
 				}
-				mainWindow.Restore()
-				mainWindow.Show()
-				mainWindow.Focus()
+				restoreWailsWindow(mainWindow)
+				showWailsWindow(mainWindow)
+				focusWailsWindow(mainWindow)
 			},
 		},
 		Services: []application.Service{
@@ -39,7 +61,7 @@ func main() {
 	})
 	cliService.SetApp(app)
 
-	mainWindow = app.Window.NewWithOptions(application.WebviewWindowOptions{
+	mainWindow = createWailsWindow(app.Window, application.WebviewWindowOptions{
 		Title:            "Buzz",
 		Width:            1160,
 		Height:           760,
@@ -47,8 +69,9 @@ func main() {
 		Mac:              application.MacWindow{TitleBar: application.MacTitleBarHidden},
 		URL:              "/",
 	})
+	return app, cliService
+}
 
-	if err := app.Run(); err != nil {
-		log.Fatal(err)
-	}
+func runWailsApp(app *application.App) error {
+	return invokeWailsRun(app)
 }

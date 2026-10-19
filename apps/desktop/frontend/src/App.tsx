@@ -155,9 +155,7 @@ function App() {
     setConfirm(action);
   };
 
-  const confirmAction = () => {
-    if (!confirm) return;
-    const action = confirm;
+  const confirmAction = (action: Action) => {
     setConfirm(null);
     setActionNotice("");
     actions.current = [];
@@ -211,7 +209,7 @@ function App() {
                 {virtualRows.map((row) => {
                   const pkg = visiblePackages[row.index];
                   return <div key={row.key} ref={virtualizer.measureElement} data-index={row.index} className="package-virtual-row" style={{ height: row.size, transform: `translateY(${row.start}px)` }}>
-                    <PackageRow pkg={pkg} view={view} index={row.index + 1} selected={selected ? packageKey(selected) === packageKey(pkg) : false} onSelect={() => { setSelectedKey(packageKey(pkg)); setDetailOpen(true); }} onAction={queueAction} disabled={busy} />
+                    <PackageRow pkg={pkg} view={view} index={row.index + 1} selected={packageKey(selected!) === packageKey(pkg)} onSelect={() => { setSelectedKey(packageKey(pkg)); setDetailOpen(true); }} onAction={queueAction} disabled={busy} />
                   </div>;
                 })}
               </div>
@@ -224,7 +222,7 @@ function App() {
       </main>
 
       <dialog ref={dialog} className="confirm-dialog" onCancel={() => setConfirm(null)} aria-labelledby="confirm-title">
-        {confirm && <><div className="dialog-icon"><Trash2 size={18} /></div><h2 id="confirm-title">Remove {confirm.pkg.name}?</h2><p>This will uninstall the Homebrew {confirm.pkg.isCask ? "cask" : "formula"} from this Mac.</p><div className="dialog-actions"><Button variant="outline" onClick={() => setConfirm(null)}>Cancel</Button><Button variant="destructive" onClick={confirmAction}>Remove {confirm.pkg.name}</Button></div></>}
+        {confirm && <><div className="dialog-icon">{confirm.operation === "uninstall" ? <Trash2 size={18} /> : confirm.operation === "install" ? <Download size={18} /> : <Upload size={18} />}</div><h2 id="confirm-title">{actionVerb(confirm.operation)} {confirm.pkg.name}?</h2><p>{actionDescription(confirm)}</p><div className="dialog-actions"><Button variant="outline" onClick={() => setConfirm(null)}>Cancel</Button><Button variant="destructive" onClick={() => confirmAction(confirm)}>{actionVerb(confirm.operation)} {confirm.pkg.name}</Button></div></>}
       </dialog>
     </div>
   );
@@ -234,11 +232,12 @@ function PackageRow({ pkg, view, index, selected, onSelect, onAction, disabled }
   pkg: PackageInfo; view: View; index: number; selected: boolean; onSelect: () => void;
   onAction: (action: Action) => void; disabled: boolean;
 }) {
+  const version = view === "Discover" ? pkg.version : pkg.installedVersion || "Installed";
   return <div className={`package-row ${selected ? "selected" : ""}`} role="listitem">
     <button className="row-main" onClick={onSelect} aria-pressed={selected}>
       <span className="row-number">{String(index).padStart(2, "0")}</span><span className="package-symbol"><Package size={16} strokeWidth={1.7} /></span>
       <span className="package-summary"><strong>{pkg.name}</strong><span>{displaySource(pkg)}</span></span>
-      <span className="row-version">{view === "Discover" ? pkg.version : pkg.isInstalled ? pkg.installedVersion || "Installed" : pkg.version}</span>
+      <span className="row-version">{version}</span>
       {view === "Discover" && pkg.isInstalled ? <Badge variant="outline" className="installed-badge">{pkg.isOutdated ? "Installed · Update" : "Installed"}</Badge> : pkg.isOutdated && <Badge variant="outline" className="update-badge">Update</Badge>}
     </button>
     <div className="row-actions">{view !== "Discover" && pkg.isInstalled && pkg.isOutdated && pkg.installSupported && !pkg.isPinned && <Button size="sm" variant="outline" aria-label={`Upgrade ${pkg.name}`} disabled={disabled} onClick={() => onAction({ operation: "upgrade", pkg })}><Upload size={14} />Upgrade</Button>}{view === "Installed" && pkg.isInstalled && pkg.installSupported ? <Button size="icon-sm" variant="ghost" className="row-remove" aria-label={`Remove ${pkg.name}`} disabled={disabled} onClick={() => onAction({ operation: "uninstall", pkg })}><Trash2 size={15} /></Button> : view === "Discover" && !pkg.isInstalled && pkg.installSupported ? <Button size="sm" aria-label={`Install ${pkg.name}`} disabled={disabled} onClick={() => onAction({ operation: "install", pkg })}><Download size={14} />Install</Button> : null}</div>
@@ -265,6 +264,19 @@ function formatAge(seconds: number): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m old`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h old`;
   return `${Math.floor(seconds / 86400)}d old`;
+}
+
+function actionVerb(operation: Action["operation"]): string {
+  if (operation === "install") return "Install";
+  if (operation === "upgrade") return "Upgrade";
+  return "Remove";
+}
+
+function actionDescription(action: Action): string {
+  const subject = `Homebrew ${action.pkg.isCask ? "cask" : "formula"}`;
+  if (action.operation === "install") return `This will install the ${subject} on this Mac.`;
+  if (action.operation === "upgrade") return `This will upgrade the ${subject} on this Mac.`;
+  return `This will uninstall the ${subject} from this Mac.`;
 }
 
 export default App;

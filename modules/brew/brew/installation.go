@@ -39,23 +39,28 @@ type installReceipt struct {
 
 var brewExecutable, brewExecutableErr = findBrewExecutable()
 
-var brewPrefix = func() string {
-	if brewExecutableErr != nil {
+var brewLookPath = exec.LookPath
+var brewStat = os.Stat
+
+var brewPrefix = detectBrewPrefix(brewExecutable, brewExecutableErr)
+
+func detectBrewPrefix(executable string, executableErr error) string {
+	if executableErr != nil {
 		return ""
 	}
-	bytes, err := exec.Command(brewExecutable, "--prefix").Output()
+	bytes, err := exec.Command(executable, "--prefix").Output()
 	if err != nil {
 		return ""
 	}
 	return strings.TrimSpace(string(bytes))
-}()
+}
 
 func findBrewExecutable() (string, error) {
-	if path, err := exec.LookPath("brew"); err == nil {
+	if path, err := brewLookPath("brew"); err == nil {
 		return path, nil
 	}
 	for _, path := range []string{"/opt/homebrew/bin/brew", "/usr/local/bin/brew", "/home/linuxbrew/.linuxbrew/bin/brew"} {
-		info, err := os.Stat(path)
+		info, err := brewStat(path)
 		if err == nil && !info.IsDir() {
 			return path, nil
 		}
@@ -63,13 +68,15 @@ func findBrewExecutable() (string, error) {
 	return "", fmt.Errorf("Homebrew executable not found in PATH or standard install locations")
 }
 
-var pinnedPackages = func() map[string]bool {
+var pinnedPackages = findPinnedPackages(brewPrefix)
+
+func findPinnedPackages(prefix string) map[string]bool {
 	formulae := make(map[string]bool)
-	if brewPrefix == "" {
+	if prefix == "" {
 		return formulae
 	}
 
-	dir := filepath.Join(brewPrefix, "var/homebrew/pinned")
+	dir := filepath.Join(prefix, "var/homebrew/pinned")
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return formulae
@@ -79,7 +86,7 @@ var pinnedPackages = func() map[string]bool {
 		formulae[entry.Name()] = true
 	}
 	return formulae
-}()
+}
 
 func fetchInstalledFormula(fetchSize bool, resultCh chan []*installInfo) {
 	if brewPrefix == "" {

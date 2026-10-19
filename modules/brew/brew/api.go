@@ -14,15 +14,17 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var taproomCacheDir = func() string {
-	home, err := os.UserHomeDir()
+var taproomCacheDir = homeCacheDir(os.UserHomeDir)
+
+func homeCacheDir(userHomeDir func() (string, error)) string {
+	home, err := userHomeDir()
 	if err == nil {
 		return filepath.Join(home, ".cache", "taproom")
 	} else {
 		log.Printf("failed to locate user's home dir: %v", err)
 		return ".cache"
 	}
-}()
+}
 
 const (
 	apiFormulaURL             = "https://formulae.brew.sh/api/formula.jws.json"

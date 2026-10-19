@@ -21,6 +21,12 @@ type DetailsPanelModel struct {
 }
 
 var (
+	getPackage                      = brew.GetPackage
+	getRecursiveMissingDeps         = brew.GetRecursiveMissingDeps
+	getRecursiveInstalledDependents = brew.GetRecursiveInstalledDependents
+)
+
+var (
 	detailPanelStyle = baseStyle.
 				Padding(0, 1)
 
@@ -146,7 +152,7 @@ func (m *DetailsPanelModel) updatePanel() {
 	if len(m.pkg.Conflicts) > 0 {
 		b.WriteString("\nConflicts:\n")
 		for _, c := range m.pkg.Conflicts {
-			if p := brew.GetPackage(c); p != nil {
+			if p := getPackage(c); p != nil {
 				b.WriteString(fmt.Sprintf("  %s %s\n", formatStatusSymbol(p), c))
 			}
 		}
@@ -155,16 +161,16 @@ func (m *DetailsPanelModel) updatePanel() {
 	if len(m.pkg.Dependencies) > 0 {
 		b.WriteString("\nDependencies:\n")
 		for _, dep := range m.pkg.Dependencies {
-			depPkg := brew.GetPackage(dep)
+			depPkg := getPackage(dep)
 			if depPkg == nil {
 				continue
 			}
 			b.WriteString(fmt.Sprintf("  %s %s\n", formatStatusSymbol(depPkg), dep))
 			if !depPkg.IsInstalled {
 				// For uninstalled dependencies, show all recursive uninstalled dependencies
-				recursiveDeps := util.SortAndUniq(brew.GetRecursiveMissingDeps(dep))
+				recursiveDeps := util.SortAndUniq(getRecursiveMissingDeps(dep))
 				for _, d := range recursiveDeps {
-					if p := brew.GetPackage(d); p != nil && !p.IsInstalled {
+					if p := getPackage(d); p != nil && !p.IsInstalled {
 						b.WriteString(fmt.Sprintf("    %s %s\n", formatStatusSymbol(p), d))
 					}
 				}
@@ -175,7 +181,7 @@ func (m *DetailsPanelModel) updatePanel() {
 	if len(m.pkg.BuildDependencies) > 0 {
 		b.WriteString("\nBuild dependencies:\n")
 		for _, dep := range m.pkg.BuildDependencies {
-			if p := brew.GetPackage(dep); p != nil {
+			if p := getPackage(dep); p != nil {
 				b.WriteString(fmt.Sprintf("  %s %s\n", formatStatusSymbol(p), dep))
 			}
 		}
@@ -184,16 +190,16 @@ func (m *DetailsPanelModel) updatePanel() {
 	if len(m.pkg.Dependents) > 0 {
 		b.WriteString("\nRequired By:\n")
 		for _, dep := range m.pkg.Dependents {
-			depPkg := brew.GetPackage(dep)
+			depPkg := getPackage(dep)
 			if depPkg == nil {
 				continue
 			}
 			b.WriteString(fmt.Sprintf("  %s %s\n", formatStatusSymbol(depPkg), dep))
 			if depPkg.IsInstalled {
 				// For installed dependents, show all recursive explicitly installed dependents
-				recursiveDependents := util.SortAndUniq(brew.GetRecursiveInstalledDependents(dep))
+				recursiveDependents := util.SortAndUniq(getRecursiveInstalledDependents(dep))
 				for _, d := range recursiveDependents {
-					if p := brew.GetPackage(d); p != nil && p.IsInstalled && !p.InstalledAsDependency {
+					if p := getPackage(d); p != nil && p.IsInstalled && !p.InstalledAsDependency {
 						b.WriteString(fmt.Sprintf("    %s %s\n", formatStatusSymbol(p), d))
 					}
 				}

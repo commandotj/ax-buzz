@@ -23,39 +23,59 @@ import (
 )
 
 var (
-	flagShowVersion = pflag.BoolP("version", "v", false, "Show app version")
-	flagShowHelp    = pflag.BoolP("help", "h", false, "Show help message")
+	flagShowVersion  = pflag.BoolP("version", "v", false, "Show app version")
+	flagShowHelp     = pflag.BoolP("help", "h", false, "Show help message")
+	loadCatalog      = brew.LoadPackages
+	performAction    = brew.RunPackageAction
+	processExit      = os.Exit
+	startProgram     = runProgram
+	newSignalContext = signal.NotifyContext
 )
 
 //go:embed .version
 var version string
 
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "--stream-json" {
-		log.SetOutput(os.Stderr)
-		if err := runStreamJSON(os.Stdout, os.Stderr, os.Args[2:]); err != nil {
-			os.Exit(1)
-		}
-		return
+	if err := run(os.Args[1:], os.Stdout, os.Stderr); err != nil {
+		exitWithError(err)
 	}
-	if len(os.Args) > 1 && os.Args[1] == "--machine" {
-		if err := runMachine(os.Stdout, os.Args[2:]); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		return
+}
+
+func exitWithError(err error) {
+	fmt.Fprintln(os.Stderr, err)
+	processExit(1)
+}
+
+func runProgram(p *tea.Program) error {
+	_, err := p.Run()
+	return err
+}
+
+func run(args []string, output, diagnostics io.Writer) error {
+	if len(args) > 0 && args[0] == "--stream-json" {
+		log.SetOutput(diagnostics)
+		return runStreamJSON(output, args[1:])
+	}
+	if len(args) > 0 && args[0] == "--machine" {
+		return runMachine(output, args[1:])
 	}
 
-	pflag.Parse()
+	flagSet := pflag.NewFlagSet("buzz", pflag.ContinueOnError)
+	flagSet.SetOutput(diagnostics)
+	flagSet.Usage = func() { flagSet.PrintDefaults() }
+	pflag.CommandLine.VisitAll(flagSet.AddFlag)
+	if err := flagSet.Parse(args); err != nil && err != pflag.ErrHelp {
+		return err
+	}
 
 	if *flagShowVersion {
-		fmt.Print(version)
-		os.Exit(0)
+		_, err := fmt.Fprint(output, version)
+		return err
 	}
 
 	if *flagShowHelp {
-		pflag.Usage()
-		os.Exit(0)
+		flagSet.Usage()
+		return nil
 	}
 
 	ui.InitTheme()
@@ -63,7 +83,7 @@ func main() {
 	logfile := util.GetEnv("BUZZ_LOG", util.GetEnv("TAPROOM_LOG", "/tmp/taproom.log"))
 	f, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
-		log.Fatalf("failed to create log file: %v", err)
+		return fmt.Errorf("failed to create log file: %w", err)
 	}
 	defer f.Close()
 	// Send log output to the file
@@ -71,10 +91,10 @@ func main() {
 
 	// The WithAltScreen() option provides a full-screen TUI experience.
 	p := tea.NewProgram(model.InitialModel(), tea.WithAltScreen())
-	if _, err := p.Run(); err != nil {
-		fmt.Printf("Alas, there's been an error: %v", err)
-		os.Exit(1)
+	if err := startProgram(p); err != nil {
+		return fmt.Errorf("Alas, there's been an error: %w", err)
 	}
+	return nil
 }
 
 func runMachine(output io.Writer, args []string) error {
@@ -98,36 +118,36 @@ type streamOperation struct {
 	isCask    bool
 }
 
-func runStreamJSON(output io.Writer, diagnostics io.Writer, args []string) error {
+func runStreamJSON(output io.Writer, args []string) error {
 	writer := protocol.NewWriter(output)
 	operation, err := parseStreamOperation(args)
 	if err != nil {
-		return finishStream(writer, diagnostics, err)
+		return finishStream(writer, err)
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := newSignalContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	progress := func(message string) {
 		_ = writer.Progress(map[string]string{"message": message})
 	}
 	forceRefresh := operation.name == "refresh"
-	snapshot, err := brew.LoadPackages(ctx, forceRefresh, progress)
+	snapshot, err := loadCatalog(ctx, forceRefresh, progress)
 	if err != nil {
-		return finishStream(writer, diagnostics, err)
+		return finishStream(writer, err)
 	}
 	if operation.name == "install" || operation.name == "uninstall" || operation.name == "upgrade" {
 		pkg := findPackage(snapshot.Packages, operation.packageID, operation.isCask)
 		if pkg == nil {
-			return finishStream(writer, diagnostics, fmt.Errorf("package %q was not found", operation.packageID))
+			return finishStream(writer, fmt.Errorf("package %q was not found", operation.packageID))
 		}
 		if !pkg.InstallSupported {
-			return finishStream(writer, diagnostics, fmt.Errorf("package %q is not supported by Buzz", pkg.Name))
+			return finishStream(writer, fmt.Errorf("package %q is not supported by Buzz", pkg.Name))
 		}
 		if operation.name == "upgrade" && !pkg.IsInstalled {
-			return finishStream(writer, diagnostics, fmt.Errorf("package %q is not installed", pkg.Name))
+			return finishStream(writer, fmt.Errorf("package %q is not installed", pkg.Name))
 		}
 		progress(fmt.Sprintf("Running brew %s for %s", operation.name, pkg.Name))
-		if err := brew.RunPackageAction(ctx, operation.name, pkg.Name, pkg.IsCask, progress); err != nil {
-			return finishStream(writer, diagnostics, err)
+		if err := performAction(ctx, operation.name, pkg.Name, pkg.IsCask, progress); err != nil {
+			return finishStream(writer, err)
 		}
 		return writer.Result(map[string]any{"success": true, "operation": operation.name, "package": pkg.Name})
 	}
@@ -138,7 +158,7 @@ func runStreamJSON(output io.Writer, diagnostics io.Writer, args []string) error
 	}
 	for start := 0; start < len(packages); start += 100 {
 		if err := ctx.Err(); err != nil {
-			return finishStream(writer, diagnostics, err)
+			return finishStream(writer, err)
 		}
 		end := min(start+100, len(packages))
 		if err := writer.Data(map[string]any{"packages": packages[start:end]}); err != nil {
@@ -146,7 +166,7 @@ func runStreamJSON(output io.Writer, diagnostics io.Writer, args []string) error
 		}
 	}
 	if err := ctx.Err(); err != nil {
-		return finishStream(writer, diagnostics, err)
+		return finishStream(writer, err)
 	}
 	return writer.Result(map[string]any{
 		"success":         true,
@@ -206,8 +226,7 @@ func installedPackages(packages []*data.Package) []*data.Package {
 	return installed
 }
 
-func finishStream(writer *protocol.Writer, diagnostics io.Writer, err error) error {
-	_, _ = fmt.Fprintln(diagnostics, err)
+func finishStream(writer *protocol.Writer, err error) error {
 	_ = writer.Result(map[string]any{"success": false, "error": err.Error()})
 	return err
 }

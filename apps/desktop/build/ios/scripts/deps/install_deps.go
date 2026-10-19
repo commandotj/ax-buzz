@@ -27,7 +27,17 @@ type Dependency struct {
 	FailureMsg string
 }
 
-func main() {
+var outputCommand = defaultOutputCommand
+var defaultOutputCommand = func(name string, args ...string) ([]byte, error) {
+	return exec.Command(name, args...).Output()
+}
+var runCommand = func(cmd *exec.Cmd) error { return cmd.Run() }
+
+var exitProcess = os.Exit
+
+func main() { exitProcess(run()) }
+
+func run() int {
 	fmt.Println("Checking iOS development dependencies...")
 	fmt.Println("=" + strings.Repeat("=", 50))
 	fmt.Println()
@@ -42,15 +52,12 @@ func main() {
 					return false, ""
 				}
 				// Get version info
-				out, err := exec.Command("xcodebuild", "-version").Output()
+				out, err := outputCommand("xcodebuild", "-version")
 				if err != nil {
 					return false, ""
 				}
-				lines := strings.Split(string(out), "\n")
-				if len(lines) > 0 {
-					return true, strings.TrimSpace(lines[0])
-				}
-				return true, ""
+				version := strings.SplitN(string(out), "\n", 2)[0]
+				return true, strings.TrimSpace(version)
 			},
 			Required:   true,
 			InstallMsg: "Please install Xcode from the Mac App Store:\n   https://apps.apple.com/app/xcode/id497799835\n   Xcode is REQUIRED for iOS development (includes iOS SDKs, simulators, and frameworks)",
@@ -61,7 +68,7 @@ func main() {
 			Name: "Xcode Developer Path",
 			CheckFunc: func() (bool, string) {
 				// Check if xcode-select points to a valid Xcode path
-				out, err := exec.Command("xcode-select", "-p").Output()
+				out, err := outputCommand("xcode-select", "-p")
 				if err != nil {
 					return false, "xcode-select not configured"
 				}
@@ -89,8 +96,7 @@ func main() {
 			Name: "iOS SDK",
 			CheckFunc: func() (bool, string) {
 				// Get the iOS Simulator SDK path
-				cmd := exec.Command("xcrun", "--sdk", "iphonesimulator", "--show-sdk-path")
-				output, err := cmd.Output()
+				output, err := outputCommand("xcrun", "--sdk", "iphonesimulator", "--show-sdk-path")
 				if err != nil {
 					return false, "Cannot find iOS SDK"
 				}
@@ -108,8 +114,7 @@ func main() {
 				}
 
 				// Get SDK version
-				versionCmd := exec.Command("xcrun", "--sdk", "iphonesimulator", "--show-sdk-version")
-				versionOut, _ := versionCmd.Output()
+				versionOut, _ := outputCommand("xcrun", "--sdk", "iphonesimulator", "--show-sdk-version")
 				version := strings.TrimSpace(string(versionOut))
 
 				return true, fmt.Sprintf("iOS %s SDK", version)
@@ -126,7 +131,7 @@ func main() {
 					return false, ""
 				}
 				// Check if we can list runtimes
-				out, err := exec.Command("xcrun", "simctl", "list", "runtimes").Output()
+				out, err := outputCommand("xcrun", "simctl", "list", "runtimes")
 				if err != nil {
 					return false, "Cannot access simulator"
 				}
@@ -186,9 +191,9 @@ func main() {
 						cmd.Stdout = os.Stdout
 						cmd.Stderr = os.Stderr
 						cmd.Stdin = os.Stdin
-						if err := cmd.Run(); err != nil {
+						if err := runCommand(cmd); err != nil {
 							fmt.Printf("Command failed: %v\n", err)
-							os.Exit(1)
+							return 1
 						}
 						fmt.Println("✅ Command completed. Please run this check again.")
 					} else {
@@ -208,7 +213,7 @@ func main() {
 		fmt.Println("❌ Cannot check for iPhone simulators")
 		hasErrors = true
 	} else {
-		out, err := exec.Command("xcrun", "simctl", "list", "devices").Output()
+		out, err := outputCommand("xcrun", "simctl", "list", "devices")
 		if err != nil {
 			fmt.Println("❌ Failed to list simulator devices")
 			hasErrors = true
@@ -217,7 +222,7 @@ func main() {
 			fmt.Println()
 
 			// Get the latest iOS runtime
-			runtimeOut, err := exec.Command("xcrun", "simctl", "list", "runtimes").Output()
+			runtimeOut, err := outputCommand("xcrun", "simctl", "list", "runtimes")
 			if err != nil {
 				fmt.Println("   Failed to get iOS runtimes:", err)
 			} else {
@@ -281,11 +286,12 @@ func main() {
 		fmt.Println("4. Run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer")
 		fmt.Println("5. Download iOS simulators: Xcode → Settings → Platforms → iOS")
 		fmt.Println("6. Run this check again")
-		os.Exit(1)
+		return 1
 	} else {
 		fmt.Println("✅ All required dependencies are installed!")
 		fmt.Println("   You're ready for iOS development with Wails!")
 	}
+	return 0
 }
 
 func checkCommand(args []string) bool {
@@ -295,7 +301,7 @@ func checkCommand(args []string) bool {
 	cmd := exec.Command(args[0], args[1:]...)
 	cmd.Stdout = nil
 	cmd.Stderr = nil
-	err := cmd.Run()
+	err := runCommand(cmd)
 	return err == nil
 }
 

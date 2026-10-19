@@ -29,6 +29,7 @@ const (
 var (
 	githubRepoUrl = regexp.MustCompile(`^https://github.com/([^/\s]+)/([^/\.\s]+)`)
 	githubPageUrl = regexp.MustCompile(`^https://([^.\s]+).github.io/([^/\s]+)`)
+	ghReleaseView = runGhReleaseView
 )
 
 func GetGithubReleaseInfo(urls []string, homepage string) *ReleaseInfo {
@@ -62,11 +63,17 @@ func isGhInstalled() bool {
 	}
 }
 
+func runGhReleaseView(owner, repo string) ([]byte, error) {
+	return ghCommandOutput("release", "view", "--repo", fmt.Sprintf("%s/%s", owner, repo), "--json", releaseFields)
+}
+
+func ghCommandOutput(args ...string) ([]byte, error) {
+	return exec.Command(gh, args...).Output()
+}
+
 func fetchLatestRelease(ghOwner, ghRepo string) *ReleaseInfo {
 	var note ghReleaseInfo
-	cmd := exec.Command(gh, "release", "view", "--repo", fmt.Sprintf("%s/%s", ghOwner, ghRepo), "--json", releaseFields)
-
-	body, err := cmd.Output()
+	body, err := ghReleaseView(ghOwner, ghRepo)
 	if err != nil {
 		if e, ok := err.(*exec.ExitError); ok {
 			log.Printf("Failed to get release info for %s/%s: %s", ghOwner, ghRepo, e.Stderr)

@@ -9,6 +9,8 @@ import (
 	"sync"
 )
 
+var newBrewExecCommandContext = exec.CommandContext
+
 func RunPackageAction(ctx context.Context, action, name string, isCask bool, progress func(string)) error {
 	if name == "" {
 		return fmt.Errorf("package name is required")
@@ -25,7 +27,7 @@ func runBrew(ctx context.Context, args []string, progress func(string)) error {
 	if brewExecutableErr != nil {
 		return brewExecutableErr
 	}
-	cmd := exec.CommandContext(ctx, brewExecutable, args...)
+	cmd := newBrewExecCommandContext(ctx, brewExecutable, args...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("open Homebrew stdout: %w", err)
