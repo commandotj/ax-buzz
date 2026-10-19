@@ -1,6 +1,6 @@
 # RFC 0008: Buzz Desktop Software Management UI (child of 0001)
 
-**Status:** Approved
+**Status:** Implemented
 
 **Parent:** [0001](0001-buzz-installer.md)
 
@@ -38,7 +38,7 @@ Build the main window as a persistent left navigation rail and a content pane. T
 
 At the normal desktop window size, show a package list beside a selected-package inspector. The inspector shows the selected package's description, installed and available versions, source/type, and supported actions. Keep list scrolling in the content pane. At narrower supported widths, let the inspector collapse into a dismissible detail panel so the list remains usable; navigation selection must not alter scroll position. Initial window size is 1160×760; verify layout at 900×650 and the normal size.
 
-`Installed` lists locally installed Homebrew formulae and casks. Each row shows name, installed version, package type/source, and available actions. `Remove` requires an explicit confirmation naming the package. `Updates` lists installed packages with a newer version and provides per-package upgrade plus an explicit `Upgrade all` action. `Discover` lists available formulae and casks, indicates installed state, and offers `Install` for uninstalled supported items. Installed items in Discover are informational and do not expose Remove. Use TanStack Virtual's React adapter (`@tanstack/react-virtual`) to virtualize the package list: mount only visible rows plus a small overscan, while retaining the full filtered catalog and native list scrolling. Unsupported/unmanaged items remain visible only where inventory data provides them and have no destructive action.
+`Installed` lists locally installed Homebrew formulae and casks. Each row shows name, installed version, package type/source, and available actions. `Remove` requires an explicit confirmation naming the package. `Updates` lists installed packages with a newer version and provides per-package upgrade plus an explicit `Upgrade all` action. `Discover` lists available formulae and casks, indicates installed state, and offers `Install` for uninstalled supported items. Installed items in Discover are informational and do not expose Remove. Use TanStack Virtual's React adapter (`@tanstack/react-virtual`) to virtualize the package list: mount only visible rows plus a small overscan, while retaining the full filtered catalog and native list scrolling. Homebrew formulae/casks without a supported action remain visible with that action unavailable. Buzz does not include standalone macOS applications or packages from other package managers.
 
 On launch, render cached catalog and inventory data immediately when available. Show last refresh time and a stale indicator when the CLI reports stale cache. Refresh is user-triggered; it shows inline progress while retaining the current list and selection. Empty cache shows a clear first-load state and starts the catalog fetch. Loading, empty, command failure, cancellation, and action success each have explicit visible states. A successful install/remove/upgrade refreshes the affected inventory/catalog state while preserving the active view, search query, scroll offset, and selected package when that package remains in the list.
 
