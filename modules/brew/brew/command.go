@@ -27,6 +27,8 @@ type CommandFinishMsg struct {
 
 type BrewCommand string
 
+var newBrewExecCommand = exec.Command
+
 const (
 	BrewCommandUpgradeAll BrewCommand = "upgradeAll"
 	BrewCommandUpgrade    BrewCommand = "upgrade"
@@ -81,7 +83,7 @@ func execute(BrewCommand BrewCommand, pkgs []*data.Package, args ...string) tea.
 				ch <- CommandFinishMsg{Err: brewExecutableErr}
 				return
 			}
-			cmd := exec.Command(brewExecutable, args...)
+			cmd := newBrewExecCommand(brewExecutable, args...)
 			// Connect to stdout and stderr
 			stdout, err := cmd.StdoutPipe()
 			if err != nil {
@@ -171,9 +173,10 @@ func UpdatePackageForAction(command BrewCommand, pkgs []*data.Package) {
 		}
 	case BrewCommandInstall:
 		for _, pkg := range pkgs {
+			missingDeps := GetRecursiveMissingDeps(pkg.Name)
 			pkg.MarkInstalled()
 			// Also mark uninstalled dependencies as installed
-			for _, depName := range GetRecursiveMissingDeps(pkg.Name) {
+			for _, depName := range missingDeps {
 				GetPackage(depName).MarkInstalled()
 			}
 		}

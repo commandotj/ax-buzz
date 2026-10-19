@@ -7,4 +7,5 @@ apps/desktop/bin/
 node_modules/
 .turbo/
 apps/desktop/frontend/dist/
+apps/desktop/frontend/coverage/
 .playwright-mcp/

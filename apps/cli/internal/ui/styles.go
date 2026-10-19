@@ -9,7 +9,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
-var flagTheme = pflag.String("theme", "auto", "Color theme: auto, light, dark")
+var (
+	flagTheme        = pflag.String("theme", "auto", "Color theme: auto, light, dark")
+	exitInvalidTheme = os.Exit
+)
 
 var (
 	highlightColor           = lipgloss.AdaptiveColor{Light: "#B8860B", Dark: "#FFD580"}
@@ -43,6 +46,6 @@ func InitTheme() {
 		// Let lipgloss auto-detect
 	default:
 		fmt.Fprintf(os.Stderr, "Invalid theme: %s (expected auto, light, dark)\n", *flagTheme)
-		os.Exit(1)
+		exitInvalidTheme(1)
 	}
 }

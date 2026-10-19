@@ -2,7 +2,7 @@
 
 **Status:** Implemented
 
-**Parent:** [0001](../0001-buzz-installer.md)
+**Parent:** [0001](0001-buzz-installer.md)
 
 ## Summary
 

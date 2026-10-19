@@ -38,7 +38,7 @@ jobs:
     name: Build ${{ matrix.arch }} DMG
     needs: [validate-tag]
     runs-on: ${{ matrix.runner }}
-    environment: macos-release
+    environment: release
     permissions:
       contents: read
     strategy:
@@ -106,7 +106,7 @@ jobs:
             APPLE_NOTARY_API_KEY_ID \
             APPLE_NOTARY_ISSUER_ID; do
             if [[ -z "${!name}" ]]; then
-              echo "::error::Missing macos-release environment secret: $name"
+              echo "::error::Missing release environment secret: $name"
               missing+=("$name")
             fi
           done

@@ -14,6 +14,11 @@ import (
 	"github.com/pkg/browser"
 )
 
+var (
+	openExternalURL     = browser.OpenURL
+	getOutdatedPackages = brew.GetOutdatedPackages
+)
+
 // focusMode defines which component is currently focused
 type focusMode int
 
@@ -199,18 +204,18 @@ func (m *model) handleTableKeys(msg tea.KeyMsg) tea.Cmd {
 	// Commands
 	case key.Matches(msg, m.keys.OpenHomePage):
 		if selectedPkg != nil && selectedPkg.Homepage != "" {
-			browser.OpenURL(selectedPkg.Homepage)
+			openExternalURL(selectedPkg.Homepage)
 		}
 	case key.Matches(msg, m.keys.OpenBrewUrl):
 		if selectedPkg != nil {
-			browser.OpenURL(selectedPkg.BrewUrl())
+			openExternalURL(selectedPkg.BrewUrl())
 		}
 	case key.Matches(msg, m.keys.OpenRelease):
 		if selectedPkg != nil && selectedPkg.ReleaseInfo != nil {
-			browser.OpenURL(selectedPkg.ReleaseInfo.Url)
+			openExternalURL(selectedPkg.ReleaseInfo.Url)
 		}
 	case key.Matches(msg, m.keys.UpgradeAll):
-		outdatedPkgs := brew.GetOutdatedPackages()
+		outdatedPkgs := getOutdatedPackages()
 		if !m.isExecuting && len(outdatedPkgs) > 0 {
 			cmd = brew.UpgradeAllPackages(outdatedPkgs)
 		}

@@ -14,6 +14,18 @@ func TestInitThemeDark(t *testing.T) {
 	}
 }
 
+func TestInitThemeInvalid(t *testing.T) {
+	oldTheme, oldExit := *flagTheme, exitInvalidTheme
+	t.Cleanup(func() { *flagTheme, exitInvalidTheme = oldTheme, oldExit })
+	*flagTheme = "invalid"
+	exitCode := 0
+	exitInvalidTheme = func(code int) { exitCode = code }
+	InitTheme()
+	if exitCode != 1 {
+		t.Fatalf("invalid theme exit code=%d", exitCode)
+	}
+}
+
 func TestInitThemeLight(t *testing.T) {
 	*flagTheme = "light"
 	InitTheme()

@@ -89,6 +89,9 @@ jobs:
       - name: Test Go workspace
         run: make test
 
+      - name: Test frontend with coverage
+        run: pnpm --filter @buzz/desktop-frontend test:coverage
+
       - name: Vet Go workspace
         run: make vet
 

@@ -1,8 +1,8 @@
 # RFC 0002: Multi-source Homebrew packages and Buzz CLI installation (child of 0001)
 
-**Status:** Draft
+**Status:** Pending
 
-**Parent:** [0001](0001-buzz-installer.md)
+**Parent:** [0001](../completed/0001-buzz-installer.md)
 
 ## Summary
 

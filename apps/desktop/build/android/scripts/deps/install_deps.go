@@ -11,7 +11,11 @@ import (
 	"strings"
 )
 
-func main() {
+var exitProcess = os.Exit
+
+func main() { exitProcess(run()) }
+
+func run() int {
 	fmt.Println("Checking Android development dependencies...")
 	fmt.Println()
 
@@ -134,17 +138,21 @@ func main() {
 		fmt.Println("   - Android Emulator")
 		fmt.Println("   - NDK (Side by side)")
 		fmt.Println("3. Set environment variables:")
-		if runtime.GOOS == "darwin" {
-			fmt.Println("   export ANDROID_HOME=$HOME/Library/Android/sdk")
-		} else {
-			fmt.Println("   export ANDROID_HOME=$HOME/Android/Sdk")
-		}
+		fmt.Printf("   export ANDROID_HOME=$HOME/%s\n", androidSDKRelativePath(runtime.GOOS))
 		fmt.Println("   export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator")
 		fmt.Println("4. Create an AVD via Android Studio > Tools > Device Manager")
-		os.Exit(1)
+		return 1
 	}
 
 	fmt.Println("✓ All Android development dependencies are installed!")
+	return 0
+}
+
+func androidSDKRelativePath(goos string) string {
+	if goos == "darwin" {
+		return "Library/Android/sdk"
+	}
+	return "Android/Sdk"
 }
 
 func checkCommand(name string, args ...string) bool {
