@@ -11,7 +11,7 @@ info:
   description: "Mac software discovery and management" # The application description
   copyright: "Copyright 2026 Commandotj" # Copyright text
   comments: "Buzz Installer" # Comments
-  version: "0.6.2" # The application version
+  version: "0.6.2" # The application version x-release-please-version
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
   #                               # Should match the name of your .icon file without the extension
   #                               # If not set and Assets.car exists, defaults to "appicon"

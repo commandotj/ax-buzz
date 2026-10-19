@@ -11,9 +11,8 @@
       "extra-files": [
         "apps/cli/.version",
         {
-          "type": "yaml",
-          "path": "apps/desktop/build/config.yml",
-          "jsonpath": "$.info.version"
+          "type": "generic",
+          "path": "apps/desktop/build/config.yml"
         },
         {
           "type": "xml",

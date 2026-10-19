@@ -4,13 +4,24 @@ import { compareVersions, parseSemver, parseVersionSnapshot } from './version.mj
 
 const files = {
   cli: 'v0.6.2 # x-release-please-version\n',
-  wails: 'version: \'3\'\ninfo:\n  version: "0.6.2" # app\n',
+  wails: 'version: \'3\'\ninfo:\n  version: "0.6.2" # app x-release-please-version\n',
   plist: '<key>CFBundleShortVersionString</key>\n<string>0.6.2</string>\n<key>CFBundleVersion</key>\n<string>0.6.2</string>',
   manifest: '{".":"0.6.2"}',
 };
 
 test('reads one synchronized version across app and bundled CLI metadata', () => {
   assert.equal(parseVersionSnapshot(files), '0.6.2');
+});
+
+test('reads Wails version after generic updater preserves YAML formatting', () => {
+  const wails = files.wails.replace('0.6.2', '0.7.0');
+  assert.equal(parseVersionSnapshot({
+    ...files,
+    cli: 'v0.7.0 # x-release-please-version',
+    wails,
+    plist: files.plist.replaceAll('0.6.2', '0.7.0'),
+    manifest: '{".":"0.7.0"}',
+  }), '0.7.0');
 });
 
 test('rejects missing and duplicated version fields', () => {
