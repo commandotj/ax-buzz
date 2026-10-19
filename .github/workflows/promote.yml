@@ -1,0 +1,68 @@
+name: Promote release version
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: develop-to-main-promotion
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: Open develop to main PR
+    if: >-
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'autorelease: pending')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out latest develop and main history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Require release PR token
+        env:
+          RELEASE_BOT_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+        run: |
+          if [[ -z "$RELEASE_BOT_TOKEN" ]]; then
+            echo "::error::Configure repository secret RELEASE_BOT_TOKEN with Pull requests: write access."
+            exit 1
+          fi
+
+      - name: Require a synchronized version newer than main
+        id: version
+        run: echo "value=$(node tools/version.mjs compare origin/main)" >> "$GITHUB_OUTPUT"
+
+      - name: Stop when another release version PR is pending
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          pending="$(gh pr list --repo "$REPOSITORY" --base develop --state open --label 'autorelease: pending' --json number --jq '.[0].number // empty')"
+          if [[ -n "$pending" ]]; then
+            echo "::error::Release version PR #$pending is still open; refusing to promote a moving develop branch."
+            exit 1
+          fi
+
+      - name: Create or reuse promotion PR
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_BOT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          existing_pr="$(gh pr list --repo "$REPOSITORY" --head develop --base main --state open --json number --jq '.[0].number // empty')"
+          if [[ -n "$existing_pr" ]]; then
+            echo "Reusing promotion PR #$existing_pr."
+            echo "Reused promotion PR: #$existing_pr (v$RELEASE_VERSION)" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          body="Promote Buzz v$RELEASE_VERSION after its Release Please version PR merged into develop. The main PR runs the required production source guard and full Verify checks. Review and merge remain manual."
+          gh pr create --repo "$REPOSITORY" --head develop --base main \
+            --title "chore(release): promote v$RELEASE_VERSION" --body "$body"

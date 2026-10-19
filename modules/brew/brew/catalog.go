@@ -16,6 +16,12 @@ type CatalogSnapshot struct {
 	Stale    bool
 }
 
+var readCatalogCacheAge = catalogCacheAge
+var fetchCatalogFormula = fetchFormula
+var fetchCatalogCask = fetchCask
+var fetchCatalogInstalledFormula = fetchInstalledFormula
+var fetchCatalogInstalledCask = fetchInstalledCask
+
 func LoadPackages(ctx context.Context, forceRefresh bool, progress func(string)) (*CatalogSnapshot, error) {
 	formulae := make(chan []*apiFormula, 1)
 	casks := make(chan []*apiCask, 1)
@@ -28,10 +34,10 @@ func LoadPackages(ctx context.Context, forceRefresh bool, progress func(string))
 		progress("Loading Homebrew cask catalog")
 		progress("Scanning installed formulae and casks")
 	}
-	go fetchFormula(ctx, formulae, errors, forceRefresh)
-	go fetchCask(ctx, casks, errors, forceRefresh)
-	go fetchInstalledFormula(false, formulaInstalls)
-	go fetchInstalledCask(false, caskInstalls)
+	go fetchCatalogFormula(ctx, formulae, errors, forceRefresh)
+	go fetchCatalogCask(ctx, casks, errors, forceRefresh)
+	go fetchCatalogInstalledFormula(false, formulaInstalls)
+	go fetchCatalogInstalledCask(false, caskInstalls)
 
 	var formulaData []*apiFormula
 	var caskData []*apiCask
@@ -56,7 +62,7 @@ func LoadPackages(ctx context.Context, forceRefresh bool, progress func(string))
 
 	packages := processAllData(formulaData, caskData, apiFormulaAnalytics{}, apiCaskAnalytics{}, installedFormulaData, installedCaskData)
 	allBrewPackages = packages
-	cacheAge, ok := catalogCacheAge()
+	cacheAge, ok := readCatalogCacheAge()
 	if !ok {
 		return nil, fmt.Errorf("Homebrew catalog loaded but cache timestamps are unavailable")
 	}

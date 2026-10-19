@@ -98,6 +98,14 @@ Buzz is under active development. The desktop shell, installed package view, pac
 
 Start with the [RFC roadmap](.spec/ROADMAP.md) and the individual RFC linked there. Keep changes scoped to the relevant app or function module. Run the checks for the area you change before submitting a pull request.
 
+## Automated releases
+
+Push a `feature/*` branch and wait for `CI` to pass; the workflow then opens or reuses its PR into `develop`. After feature PRs merge, Release Please opens one version and changelog PR. Merging that PR triggers a `develop` → `main` promotion PR. Once the promotion merges and `Verify` passes, Buzz tags that exact commit, builds and notarizes arm64 and Intel DMGs, publishes the GitHub Release, then opens a Cask PR to `systembugtj/luban-homebrew:develop`.
+
+Configure these fine-grained PATs as Actions secrets before enabling the automation: `FEATURE_PR_TOKEN` (Pull requests: write on `commandotj/ax-buzz`), `RELEASE_BOT_TOKEN` (Contents, Issues, and Pull requests: write on `commandotj/ax-buzz`), and `HOMEBREW_CASK_TOKEN` (Contents and Pull requests: write on `systembugtj/luban-homebrew`). Keep Apple signing and notarization credentials in the existing `release` environment. The first feature PR is a one-time manual bootstrap because GitHub only runs `workflow_run` listeners present on the default branch.
+
+For a failed release after its version tag exists, open **Actions → Buzz.app release → Run workflow** and select that existing `vX.Y.Z` tag as the workflow ref. The workflow rebuilds that immutable commit; it never moves or replaces a tag.
+
 ## License and origin
 
 See [LICENSE](LICENSE) for license terms. Buzz CLI's terminal UI derives from [Taproom](https://github.com/hzqtc/taproom); the `taproom` executable and legacy settings remain for compatibility.

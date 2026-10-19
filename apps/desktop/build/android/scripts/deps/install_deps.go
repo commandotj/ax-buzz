@@ -11,7 +11,11 @@ import (
 	"strings"
 )
 
-func main() {
+var exitProcess = os.Exit
+
+func main() { exitProcess(run()) }
+
+func run() int {
 	fmt.Println("Checking Android development dependencies...")
 	fmt.Println()
 
@@ -111,8 +115,7 @@ func main() {
 			avds := strings.Split(strings.TrimSpace(string(output)), "\n")
 			fmt.Printf("✓ Found %d Android Virtual Device(s)\n", len(avds))
 		} else {
-			// Mirror the iOS installer, which offers to create a simulator when
-			// none exist. Only create from an already-installed system image.
+			// Offer to create an AVD only from an installed system image.
 			offerCreateAVD(androidHome)
 		}
 	}
@@ -134,17 +137,21 @@ func main() {
 		fmt.Println("   - Android Emulator")
 		fmt.Println("   - NDK (Side by side)")
 		fmt.Println("3. Set environment variables:")
-		if runtime.GOOS == "darwin" {
-			fmt.Println("   export ANDROID_HOME=$HOME/Library/Android/sdk")
-		} else {
-			fmt.Println("   export ANDROID_HOME=$HOME/Android/Sdk")
-		}
+		fmt.Printf("   export ANDROID_HOME=$HOME/%s\n", androidSDKRelativePath(runtime.GOOS))
 		fmt.Println("   export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator")
 		fmt.Println("4. Create an AVD via Android Studio > Tools > Device Manager")
-		os.Exit(1)
+		return 1
 	}
 
 	fmt.Println("✓ All Android development dependencies are installed!")
+	return 0
+}
+
+func androidSDKRelativePath(goos string) string {
+	if goos == "darwin" {
+		return "Library/Android/sdk"
+	}
+	return "Android/Sdk"
 }
 
 func checkCommand(name string, args ...string) bool {
@@ -154,10 +161,8 @@ func checkCommand(name string, args ...string) bool {
 	return cmd.Run() == nil
 }
 
-// offerCreateAVD mirrors the iOS installer's simulator offer: when no AVD
-// exists, offer to create one — but ONLY from a system image that is already
-// installed. We never run sdkmanager here (a multi-GB download with a license
-// prompt is a surprise the user should trigger themselves).
+// offerCreateAVD creates an AVD only from an installed system image.
+// It never runs sdkmanager, which could trigger a multi-GB download.
 func offerCreateAVD(androidHome string) {
 	abi := "x86_64"
 	if runtime.GOARCH == "arm64" {

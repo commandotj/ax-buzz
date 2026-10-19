@@ -21,6 +21,8 @@ var allBrewPackages []*data.Package
 
 var flagFetchReleaseInfo = pflag.Bool("fetch-release", false, "Fetching release data for installed packages")
 
+var fetchGithubReleaseInfo = gh.GetGithubReleaseInfo
+
 type DataLoadedMsg struct {
 	Packages []*data.Package
 }
@@ -173,7 +175,7 @@ func processAllData(
 		if *flagFetchReleaseInfo && pkg.IsInstalled {
 			// Fetch release note in background as non blocking go routines
 			go func() {
-				pkg.ReleaseInfo = gh.GetGithubReleaseInfo(pkg.Urls, pkg.Homepage)
+				pkg.ReleaseInfo = fetchGithubReleaseInfo(pkg.Urls, pkg.Homepage)
 			}()
 		}
 		if pkg.IsCask {

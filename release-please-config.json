@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "f43ac21dea20a3db6871aabeecaca2b3de225aba",
+  "include-v-in-tag": true,
+  "include-component-in-tag": false,
+  "separate-pull-requests": false,
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "buzz",
+      "extra-files": [
+        "apps/cli/.version",
+        {
+          "type": "generic",
+          "path": "apps/desktop/build/config.yml"
+        },
+        {
+          "type": "xml",
+          "path": "apps/desktop/build/darwin/Info.plist",
+          "xpath": "//key[text()='CFBundleShortVersionString']/following-sibling::string[1] | //key[text()='CFBundleVersion']/following-sibling::string[1]"
+        }
+      ]
+    }
+  }
+}
