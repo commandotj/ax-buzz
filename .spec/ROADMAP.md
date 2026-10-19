@@ -18,3 +18,4 @@
 | 0014 | [Tag-based Buzz CLI GitHub releases (child of 0012)](rfc/rejected/0014-tagged-cli-release.md) | Superseded |
 | 0015 | [Buzz.app DMG GitHub Release (child of 0012)](rfc/0015-buzz-app-dmg-release.md) | Approved |
 | 0016 | [Buzz feature, develop, and main branch flow](rfc/0016-branch-promotion-flow.md) | Approved |
+| 0017 | [Remove unsupported Wails iOS target](rfc/completed/0017-remove-unused-ios-target.md) | Implemented |
