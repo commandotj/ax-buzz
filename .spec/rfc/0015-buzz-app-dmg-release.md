@@ -28,8 +28,12 @@ Remove manual standalone CLI archive and GitHub release targets from the root `M
 
 Replace the CLI-only release workflow with a tag-triggered desktop release. Build architecture-specific DMGs on matching `macos-15` (`arm64`) and `macos-15-intel` (`amd64`) runners. Validate the embedded `CFBundleShortVersionString` against the tag, verify each DMG and its contents, and publish only the DMGs. Keep release write permission in the publishing job.
 
+The trusted tag workflow creates an annotated version tag after main CI succeeds. Configure repository-local Git `user.name` and `user.email` as `github-actions[bot]` before creating that tag; the release token authenticates the push but does not provide Git committer identity.
+
 Local app packaging uses ad-hoc signing. The tag release workflow uses the protected `release` environment for Apple signing and notarization secrets. A public macOS release requires Developer ID signing and notarization. Map required secrets into Wails signing and Apple notarization setup, validate the Developer ID identity and notary credentials, sign and notarize the app, create and staple the DMG, then publish it. Fail closed when credentials or verification are missing.
 
 ## Acceptance
 
 Wails task builds the app with matching bundled CLI and creates a valid DMG for `arm64` and `amd64`. Mounted images contain `Buzz.app` and Applications shortcut; app bundle version matches the pushed tag. Gatekeeper accepts the signed, notarized app and DMGs. GitHub Release contains only the validated DMG assets. Missing signing/notarization credentials or failed verification blocks publishing. The root `Makefile` exposes no standalone CLI archive or release target.
+
+After successful main CI, the tag workflow creates and pushes an annotated version tag on the verified main commit without relying on runner-global Git identity; that tag starts the signed and notarized DMG release workflow.
